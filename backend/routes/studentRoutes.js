@@ -4,6 +4,7 @@ const router = express.Router()
 const StudentRequest = require("../models/StudentRequest")
 
 const Application = require("../models/Application")
+const Tutor = require("../models/Tutor")
 
 router.post("/student", async (req,res)=>{
 
@@ -51,6 +52,46 @@ router.post("/apply", async (req, res) => {
     res.status(500).json({ error: err.message })
   }
 
+})
+
+router.post("/tutor", async (req, res) => {
+
+  try {
+
+    const tutor = new Tutor(req.body)
+
+    await tutor.save()
+
+    res.json({ message: "Tutor registered successfully" })
+
+  } catch (error) {
+
+    console.error(error)
+
+    res.status(500).json({ message: "Server error" })
+
+  }
+
+})
+
+router.post("/tutor-login", async (req,res)=>{
+
+  const {email,password} = req.body
+
+  const tutor = await Tutor.findOne({email})
+
+  if(!tutor){
+    return res.json({message:"Tutor not found"})
+  }
+
+  if(tutor.password !== password){
+    return res.json({message:"Incorrect password"})
+  }
+
+  res.json({
+    message:"Login successful",
+    tutor
+  })
 })
 
 module.exports = router
