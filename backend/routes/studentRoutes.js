@@ -25,25 +25,31 @@ router.get("/studentrequests", async (req, res) => {
 
 router.post("/apply", async (req, res) => {
 
-  const { tutorName, studentRequestId } = req.body
+  try {
 
-  const existing = await Application.findOne({
-    tutorName,
-    studentRequestId
-  })
+    const { tutorName, studentRequestId } = req.body
 
-  if (existing) {
-    return res.json({ message: "Already applied" })
+    const existing = await Application.findOne({
+      tutorName,
+      studentRequestId
+    })
+
+    if (existing) {
+      return res.json({ message: "Already applied" })
+    }
+
+    const application = new Application({
+      tutorName,
+      studentRequestId
+    })
+
+    await application.save()
+
+    res.json({ message: "Application submitted" })
+
+  } catch (err) {
+    res.status(500).json({ error: err.message })
   }
-
-  const application = new Application({
-    tutorName,
-    studentRequestId
-  })
-
-  await application.save()
-
-  res.json({ message: "Application submitted" })
 
 })
 
