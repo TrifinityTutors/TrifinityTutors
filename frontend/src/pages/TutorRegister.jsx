@@ -1,25 +1,56 @@
 import { useState } from "react"
 
-function TutorRegister(){
+function TutorRegister() {
 
-  const [form,setForm] = useState({
-    name:"",
-    subjects:"",
-    experience:"",
-    locality:""
+  const [form, setForm] = useState({
+    name: "",
+    email: "",
+    password: "",
+    subject: "",
+    locality: "",
+    experience: "",
+    phone: ""
   })
 
-  const handleChange = (e)=>{
-    setForm({...form,[e.target.name]:e.target.value})
+  const handleChange = (e) => {
+    setForm({ ...form, [e.target.name]: e.target.value })
   }
 
-  const handleSubmit = (e)=>{
+  const handleSubmit = async (e) => {
     e.preventDefault()
-    console.log(form)
+
+    try {
+
+      const response = await fetch("http://localhost:5000/api/tutor", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(form)
+      })
+
+      const data = await response.json()
+
+      alert(data.message)
+
+      // clear form after submit
+      setForm({
+        name: "",
+        email: "",
+        password: "",
+        subject: "",
+        locality: "",
+        experience: "",
+        phone: ""
+      })
+
+    } catch (error) {
+      console.error(error)
+      alert("Error registering tutor")
+    }
   }
 
-  return(
-
+  return (
     <div>
 
       <h2>Tutor Registration</h2>
@@ -29,36 +60,61 @@ function TutorRegister(){
         <input
           name="name"
           placeholder="Name"
+          value={form.name}
           onChange={handleChange}
         />
-
         <br /><br />
 
         <input
-          name="subjects"
-          placeholder="Subjects"
+          name="email"
+          placeholder="Email"
+          value={form.email}
           onChange={handleChange}
         />
-
         <br /><br />
 
         <input
-          name="experience"
-          placeholder="Experience"
+          name="password"
+          type="password"
+          placeholder="Password"
+          value={form.password}
           onChange={handleChange}
         />
+        <br /><br />
 
+        <input
+          name="subject"
+          placeholder="Subject"
+          value={form.subject}
+          onChange={handleChange}
+        />
         <br /><br />
 
         <input
           name="locality"
           placeholder="Locality"
+          value={form.locality}
           onChange={handleChange}
         />
-
         <br /><br />
 
-        <button type="submit">Submit</button>
+        <input
+          name="experience"
+          placeholder="Experience"
+          value={form.experience}
+          onChange={handleChange}
+        />
+        <br /><br />
+
+        <input
+          name="phone"
+          placeholder="Phone"
+          value={form.phone}
+          onChange={handleChange}
+        />
+        <br /><br />
+
+        <button type="submit">Register</button>
 
       </form>
 

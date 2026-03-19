@@ -4,6 +4,7 @@ const router = express.Router()
 const StudentRequest = require("../models/StudentRequest")
 
 const Application = require("../models/Application")
+const Tutor = require("../models/Tutor")
 
 const auth = require("../middleware/auth");
 
@@ -55,80 +56,44 @@ router.post("/apply", async (req, res) => {
 
 })
 
+router.post("/tutor", async (req, res) => {
 
-// GET students with applications
-router.get("/with-applications", auth, async (req, res) => {
   try {
-    const students = await StudentRequest.find();
-    const applications = await Application.find();
 
-    const result = students.map((student) => {
-      const relatedApps = applications.filter(
-        (app) =>
-          app.studentRequestId.toString() === student._id.toString()
-      );
+    const tutor = new Tutor(req.body)
 
-      return {
-        ...student._doc,
-        applications: relatedApps
-      };
-    });
+    await tutor.save()
 
-    res.json(result);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.json({ message: "Tutor registered successfully" })
+
+  } catch (error) {
+
+    console.error(error)
+
+    res.status(500).json({ message: "Server error" })
+
   }
-});
 
-// ✅ APPROVE
-router.put("/approve/:id", auth, async (req, res) => {
-  try {
-    const app = await Application.findById(req.params.id);
+})
 
-    // ✅ Accept selected tutor
-    await Application.findByIdAndUpdate(req.params.id, {
-      status: "accepted"
-    });
+router.post("/tutor-login", async (req,res)=>{
 
-    // ❌ Reject all others for same student
-    await Application.updateMany(
-      {
-        studentRequestId: app.studentRequestId,
-        _id: { $ne: req.params.id }
-      },
-      { status: "rejected" }
-    );
+  const {email,password} = req.body
 
-    res.json({ msg: "Tutor approved and others rejected" });
+  const tutor = await Tutor.findOne({email})
 
-  } catch (err) {
-    res.status(500).json({ error: err.message });
+  if(!tutor){
+    return res.json({message:"Tutor not found"})
   }
-});
 
-// ❌ REJECT
-router.put("/reject/:id", auth, async (req, res) => {
-  try {
-    await Application.findByIdAndUpdate(req.params.id, {
-      status: "rejected"
-    });
-
-    res.json({ msg: "Tutor rejected" });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
+  if(tutor.password !== password){
+    return res.json({message:"Incorrect password"})
   }
-});
 
-// GET total students count
-router.get("/count", auth, async (req, res) => {
-  const count = await StudentRequest.countDocuments();
-  res.json({ count });
-});
-
-// protected route of authenticated admins to view all student requests
-// router.get("/", auth, async (req, res) => {
-//   const data = await Student.find();
-//   res.json(data);
-// });
+  res.json({
+    message:"Login successful",
+    tutor
+  })
+})
 
 module.exports = router
