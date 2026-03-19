@@ -6,14 +6,38 @@ export default function Login() {
   const [password, setPassword] = useState("");
   const navigate = useNavigate();
 
-  const handleLogin = () => {
-    if (email === "admin" && password === "123456") {
-      localStorage.setItem("admin", "true");
+ const handleLogin = async () => {
+  try {
+    const res = await fetch("http://localhost:5000/api/auth/login", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ email, password })
+    });
+
+    // 🔴 HANDLE SERVER ERROR
+    if (!res.ok) {
+      const text = await res.text();
+      console.log("Server Error:", text);
+      alert("Backend error — check console");
+      return;
+    }
+
+    const data = await res.json();
+
+    if (data.token) {
+      localStorage.setItem("token", data.token);
       navigate("/admin/dashboard", { replace: true });
     } else {
-      alert("Invalid login");
+      alert("Login failed");
     }
-  };
+
+  } catch (err) {
+    console.error("Fetch error:", err);
+    alert("Server not reachable");
+  }
+};
 
   return (
     <div>

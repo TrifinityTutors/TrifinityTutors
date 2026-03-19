@@ -1,31 +1,65 @@
+import { useEffect, useState } from "react";
 import Sidebar from "../components/Sidebar";
-import useNoBack from "../hooks/useNoBack";
 
-export default function Students() {
-  useNoBack();
+export default function Tutors() {
+  const [tutors, setTutors] = useState([]);
 
-  const data = [
-    { name: "Rahul", class: "10th" },
-    { name: "Priya", class: "8th" }
-  ];
+  useEffect(() => {
+    fetchTutors();
+  }, []);
+
+  const fetchTutors = async () => {
+    const res = await fetch("http://localhost:5000/api/tutors", {
+      headers: {
+        Authorization: localStorage.getItem("token")
+      }
+    });
+
+    const data = await res.json();
+    setTutors(data);
+  };
 
   return (
     <div style={{ display: "flex" }}>
       <Sidebar />
 
-      <div style={{ padding: "20px" }}>
-        <h1>Students</h1>
+      <div style={{ padding: "20px", width: "100%" }}>
+        <h1>All Tutors</h1>
 
-        {data.map((s, i) => (
-          <div key={i} style={{
-            border: "1px solid black",
-            padding: "10px",
-            margin: "10px",
-            borderRadius: "8px"
-          }}>
-            <h3>{s.name}</h3>
-            <p>{s.class}</p>
-            <button>Delete</button>
+        {tutors.map((t) => (
+          <div
+            key={t._id}
+            style={{
+              border: "1px solid #ddd",
+              padding: "15px",
+              margin: "10px 0",
+              borderRadius: "10px",
+              boxShadow: "0 2px 8px rgba(0,0,0,0.1)"
+            }}
+          >
+            <h3>👨‍🏫 {t.name}</h3>
+
+            <p><b>Email:</b> {t.email}</p>
+
+            <p>
+              <b>Subject:</b>{" "}
+              {t.subject && t.subject !== "" ? t.subject : "Not provided"}
+            </p>
+
+            <p>
+              <b>Experience:</b>{" "}
+              {t.experience ? `${t.experience} years` : "Not provided"}
+            </p>
+
+            <p>
+              <b>Phone:</b>{" "}
+              {t.phone && t.phone !== "" ? t.phone : "Not provided"}
+            </p>
+
+            <p>
+              <b>Location:</b>{" "}
+              {t.locality && t.locality !== "" ? t.locality : "Not provided"}
+            </p>
           </div>
         ))}
       </div>

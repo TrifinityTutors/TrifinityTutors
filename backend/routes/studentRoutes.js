@@ -6,6 +6,8 @@ const StudentRequest = require("../models/StudentRequest")
 const Application = require("../models/Application")
 const Tutor = require("../models/Tutor")
 
+const auth = require("../middleware/auth");
+
 router.post("/student", async (req,res)=>{
 
   const data = new StudentRequest(req.body)
@@ -15,7 +17,7 @@ router.post("/student", async (req,res)=>{
   res.json({message:"Student request saved"})
 
 })
-router.get("/studentrequests", async (req, res) => {
+router.get("/", async (req, res) => {
   try {
     const data = await StudentRequest.find()
     res.json(data)

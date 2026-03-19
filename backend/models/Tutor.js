@@ -1,3 +1,6 @@
+const mongoose = require("mongoose");
+
+const tutorSchema = new mongoose.Schema({
 const mongoose = require("mongoose")
 
 const TutorSchema = new mongoose.Schema({
@@ -6,6 +9,11 @@ const TutorSchema = new mongoose.Schema({
   password: String,
   subject: String,
   locality: String,
+  experience: String,
+  phone: String
+});
+
+module.exports = mongoose.model("Tutor", tutorSchema);
   experience: Number,
   phone: String
 })
