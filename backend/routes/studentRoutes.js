@@ -26,6 +26,39 @@ router.get("/", async (req, res) => {
   }
 })
 
+// GET students with applications
+router.get("/with-applications", async (req, res) => {
+  try {
+    const students = await StudentRequest.find();
+    const applications = await Application.find();
+
+    const data = students.map(student => {
+      const studentApps = applications.filter(
+        app => app.studentRequestId == student._id
+      );
+
+      return {
+        ...student._doc,
+        applications: studentApps
+      };
+    });
+
+    res.json(data);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// GET student count
+router.get("/count", async (req, res) => {
+  try {
+    const count = await StudentRequest.countDocuments();
+    res.json({ count });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 router.post("/apply", async (req, res) => {
 
   try {
@@ -95,5 +128,50 @@ router.post("/tutor-login", async (req,res)=>{
     tutor
   })
 })
+
+// ✅ APPROVE tutor application
+router.put("/approve/:id", async (req, res) => {
+  try {
+    const applicationId = req.params.id;
+
+    const application = await Application.findById(applicationId);
+
+    if (!application) {
+      return res.status(404).json({ msg: "Application not found" });
+    }
+
+    // mark approved
+    application.status = "approved";
+    await application.save();
+
+    res.json({ msg: "Approved successfully" });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ❌ REJECT tutor application
+router.put("/reject/:id", async (req, res) => {
+  try {
+    const applicationId = req.params.id;
+
+    const application = await Application.findById(applicationId);
+
+    if (!application) {
+      return res.status(404).json({ msg: "Application not found" });
+    }
+
+    // option 1: delete application
+    await Application.findByIdAndDelete(applicationId);
+
+    res.json({ msg: "Application rejected and removed" });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: err.message });
+  }
+});
 
 module.exports = router
