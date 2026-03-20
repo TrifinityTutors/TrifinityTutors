@@ -15,15 +15,10 @@ mongoose.connect(process.env.MONGO_URI)
 .then(()=>console.log("MongoDB Atlas Connected"))
 .catch(err=>console.log(err))
 
-<<<<<<< HEAD
-app.use("/api", studentRoutes)  // ✅ ONLY THIS
-=======
+// routes
 app.use("/api", studentRoutes)
-// auth routes
-app.use("/api/auth", require("./routes/auth"));
-app.use("/api/students", require("./routes/studentRoutes"));
-app.use("/api/tutors", require("./routes/tutorRoutes"));
->>>>>>> 8a3a93c937bd4552795e4712196c355c75ee931e
+app.use("/api/auth", require("./routes/auth"))
+app.use("/api/tutors", require("./routes/tutorRoutes"))
 
 app.listen(5000, ()=>{
   console.log("Server running on port 5000")
