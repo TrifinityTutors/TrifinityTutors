@@ -24,31 +24,35 @@ router.get("/studentrequests", async (req, res) => {
   }
 })
 
-// GET students with applications
+// ✅ GET students with applications
 router.get("/with-applications", async (req, res) => {
   try {
     const students = await StudentRequest.find();
+
     const applications = await Application.find().populate("tutorId");
 
     const data = students.map(student => {
-  const studentApps = applications
-  .filter(app => app.studentRequestId.toString() === student._id.toString())
-  .map(app => ({
-    ...app._doc,
-    tutorName: app.tutorId?.name
-  }));
+      const studentApps = applications
+      .filter(app => app.studentRequestId.toString() === student._id.toString())
+      .map(app => ({
+        ...app._doc,
+        tutorName: app.tutorId?.name
+      }));
 
-  return {
-    ...student._doc,
-    applications: studentApps
-  };
-});
+      return {
+        ...student._doc,
+        applications: studentApps
+      };
+    });
+
     res.json(data);
 
   } catch (err) {
+    console.error(err);
     res.status(500).json({ error: err.message });
   }
 });
+
 
 // GET student count
 router.get("/count", async (req, res) => {
@@ -100,32 +104,30 @@ router.post("/tutor-login", async (req, res) => {
 // Apply to student
 router.post("/apply", async (req, res) => {
   try {
-    const { tutorId, studentRequestId } = req.body
+    const { tutorId, studentRequestId } = req.body;
 
-    // prevent duplicate
     const existing = await Application.findOne({
       tutorId,
       studentRequestId
-    })
+    });
 
     if (existing) {
-      return res.json({ message: "Already applied" })
+      return res.json({ message: "Already applied" });
     }
 
     const application = new Application({
       tutorId,
-      studentRequestId,
-      status: "pending"
-    })
+      studentRequestId
+    });
 
-    await application.save()
+    await application.save();
 
-    res.json({ message: "Application submitted" })
+    res.json({ message: "Application submitted" });
 
   } catch (err) {
-    res.status(500).json({ error: err.message })
+    res.status(500).json({ error: err.message });
   }
-})
+});
 
 
 // Get tutor applications (MyApplications)
@@ -203,6 +205,26 @@ router.delete("/:id", async (req, res) => {
 
   } catch (err) {
     console.error(err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// 📊 GET student count
+router.get("/count", async (req, res) => {
+  try {
+    const count = await StudentRequest.countDocuments();
+    res.json({ count });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// 📊 GET tutor count
+router.get("/tutor-count", async (req, res) => {
+  try {
+    const count = await Tutor.countDocuments();
+    res.json({ count });
+  } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
