@@ -12,6 +12,7 @@ import Students from "./admin/pages/Students";
 import Tutors from "./admin/pages/Tutors";
 import AdminRoute from "./admin/components/AdminRoute";
 import TutorLogin from "./pages/TutorLogin"
+import MyApplications from "./pages/MyApplications"
 
 function App() {
   return (
@@ -23,6 +24,7 @@ function App() {
         <Route path="/tutor-register" element={<TutorRegister />} />
         <Route path="/dashboard" element={<TutorDashboard />} />
         <Route path="/tutor-login" element={<TutorLogin/>}/>
+        <Route path="/my-applications" element={<MyApplications />} />
 
         // rout for admin panel
         <Route path="/admin-login" element={<Login />} />

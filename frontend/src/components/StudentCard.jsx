@@ -7,13 +7,14 @@ function StudentCard({ data }) {
   const handleApply = async () => {
     try {
       const tutor = JSON.parse(localStorage.getItem("tutor"))
+
       const response = await fetch("http://localhost:5000/api/apply", {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
         },
         body: JSON.stringify({
-          tutorName: tutor.name,
+          tutorId: tutor._id,   // ✅ FIXED
           studentRequestId: data._id
         })
       })
