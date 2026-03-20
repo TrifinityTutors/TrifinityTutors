@@ -1,18 +1,20 @@
-const mongoose = require("mongoose")
+const mongoose = require("mongoose");
 
-const applicationSchema = new mongoose.Schema({
+const ApplicationSchema = new mongoose.Schema({
   tutorId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "Tutor"
   },
+
   studentRequestId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "StudentRequest"
   },
+
   status: {
     type: String,
     default: "pending"
   }
-})
+});
 
-module.exports = mongoose.model("Application", applicationSchema)
+module.exports = mongoose.model("Application", ApplicationSchema);

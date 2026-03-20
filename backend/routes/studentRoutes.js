@@ -28,20 +28,23 @@ router.get("/studentrequests", async (req, res) => {
 router.get("/with-applications", async (req, res) => {
   try {
     const students = await StudentRequest.find();
-    const applications = await Application.find();
+    const applications = await Application.find().populate("tutorId");
 
     const data = students.map(student => {
-      const studentApps = applications.filter(
-        app => app.studentRequestId == student._id
-      );
+  const studentApps = applications
+  .filter(app => app.studentRequestId.toString() === student._id.toString())
+  .map(app => ({
+    ...app._doc,
+    tutorName: app.tutorId?.name
+  }));
 
-      return {
-        ...student._doc,
-        applications: studentApps
-      };
-    });
-
+  return {
+    ...student._doc,
+    applications: studentApps
+  };
+});
     res.json(data);
+
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -176,6 +179,27 @@ router.put("/reject/:id", async (req, res) => {
     await Application.findByIdAndDelete(applicationId);
 
     res.json({ msg: "Application rejected and removed" });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ❌ DELETE student
+router.delete("/:id", async (req, res) => {
+  try {
+    const studentId = req.params.id;
+
+    // delete student
+    await StudentRequest.findByIdAndDelete(studentId);
+
+    // also delete related applications (important)
+    await Application.deleteMany({
+      studentRequestId: studentId
+    });
+
+    res.json({ msg: "Student deleted successfully" });
 
   } catch (err) {
     console.error(err);
