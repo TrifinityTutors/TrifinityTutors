@@ -14,22 +14,50 @@ import AdminRoute from "./admin/components/AdminRoute";
 import TutorLogin from "./pages/TutorLogin"
 import MyApplications from "./pages/MyApplications"
 import Navbar from "./components/Navbar"
+import MainLayout from "./layouts/MainLayout"
 
 function App() {
   return (
     <BrowserRouter>
 
-      <Navbar />   {/* ✅ THIS IS MISSING */}
-
       <Routes>
 
-        <Route path="/" element={<Home />} />
-        <Route path="/student-register" element={<StudentRegister />} />
-        <Route path="/tutor-register" element={<TutorRegister />} />
-        <Route path="/dashboard" element={<TutorDashboard />} />
-        <Route path="/tutor-login" element={<TutorLogin/>}/>
-        <Route path="/my-applications" element={<MyApplications />} />
+        {/* USER ROUTES WITH LAYOUT */}
 
+        <Route path="/" element={
+          <MainLayout>
+            <Home />
+          </MainLayout>
+        } />
+
+        <Route path="/student-register" element={
+          <MainLayout>
+            <StudentRegister />
+          </MainLayout>
+        } />
+
+        <Route path="/tutor-register" element={
+          <MainLayout>
+            <TutorRegister />
+          </MainLayout>
+        } />
+
+        <Route path="/dashboard" element={
+          <MainLayout>
+            <TutorDashboard />
+          </MainLayout>
+        } />
+
+        <Route path="/my-applications" element={
+          <MainLayout>
+            <MyApplications />
+          </MainLayout>
+        } />
+
+        {/* LOGIN (NO NAVBAR) */}
+        <Route path="/tutor-login" element={<TutorLogin />} />
+
+        {/* ADMIN (NO USER NAVBAR) */}
         <Route path="/admin-login" element={<Login />} />
 
         <Route path="/admin/dashboard" element={
