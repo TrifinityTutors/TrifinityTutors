@@ -5,18 +5,22 @@ import StudentRegister from "./pages/StudentRegister"
 import TutorRegister from "./pages/TutorRegister"
 import TutorDashboard from "./pages/TutorDashboard"
 
-// import for admin penal components
 import Login from "./admin/pages/Login";
 import Dashboard from "./admin/pages/Dashboard";
 import Students from "./admin/pages/Students";
 import Tutors from "./admin/pages/Tutors";
 import AdminRoute from "./admin/components/AdminRoute";
+
 import TutorLogin from "./pages/TutorLogin"
 import MyApplications from "./pages/MyApplications"
+import Navbar from "./components/Navbar"
 
 function App() {
   return (
     <BrowserRouter>
+
+      <Navbar />   {/* ✅ THIS IS MISSING */}
+
       <Routes>
 
         <Route path="/" element={<Home />} />
@@ -26,7 +30,6 @@ function App() {
         <Route path="/tutor-login" element={<TutorLogin/>}/>
         <Route path="/my-applications" element={<MyApplications />} />
 
-        // rout for admin panel
         <Route path="/admin-login" element={<Login />} />
 
         <Route path="/admin/dashboard" element={
@@ -46,7 +49,6 @@ function App() {
             <Tutors />
           </AdminRoute>
         } />
-
 
       </Routes>
     </BrowserRouter>
