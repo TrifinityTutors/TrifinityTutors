@@ -2,19 +2,19 @@ const express = require("express")
 const router = express.Router()
 
 const StudentRequest = require("../models/StudentRequest")
-
 const Application = require("../models/Application")
 const Tutor = require("../models/Tutor")
 
-router.post("/student", async (req,res)=>{
+// ================= STUDENT =================
 
+// Create student request
+router.post("/student", async (req, res) => {
   const data = new StudentRequest(req.body)
-
   await data.save()
-
-  res.json({message:"Student request saved"})
-
+  res.json({ message: "Student request saved" })
 })
+
+// Get all student requests
 router.get("/studentrequests", async (req, res) => {
   try {
     const data = await StudentRequest.find()
@@ -24,14 +24,51 @@ router.get("/studentrequests", async (req, res) => {
   }
 })
 
-router.post("/apply", async (req, res) => {
 
+// ================= TUTOR =================
+
+// Register tutor
+router.post("/tutor", async (req, res) => {
   try {
+    const tutor = new Tutor(req.body)
+    await tutor.save()
+    res.json({ message: "Tutor registered successfully" })
+  } catch (error) {
+    res.status(500).json({ message: "Server error" })
+  }
+})
 
-    const { tutorName, studentRequestId } = req.body
+// Tutor login
+router.post("/tutor-login", async (req, res) => {
+  const { email, password } = req.body
 
+  const tutor = await Tutor.findOne({ email })
+
+  if (!tutor) {
+    return res.json({ message: "Tutor not found" })
+  }
+
+  if (tutor.password !== password) {
+    return res.json({ message: "Incorrect password" })
+  }
+
+  res.json({
+    message: "Login successful",
+    tutor
+  })
+})
+
+
+// ================= APPLICATION =================
+
+// Apply to student
+router.post("/apply", async (req, res) => {
+  try {
+    const { tutorId, studentRequestId } = req.body
+
+    // prevent duplicate
     const existing = await Application.findOne({
-      tutorName,
+      tutorId,
       studentRequestId
     })
 
@@ -40,8 +77,9 @@ router.post("/apply", async (req, res) => {
     }
 
     const application = new Application({
-      tutorName,
-      studentRequestId
+      tutorId,
+      studentRequestId,
+      status: "pending"
     })
 
     await application.save()
@@ -51,47 +89,20 @@ router.post("/apply", async (req, res) => {
   } catch (err) {
     res.status(500).json({ error: err.message })
   }
-
 })
 
-router.post("/tutor", async (req, res) => {
 
+// Get tutor applications (MyApplications)
+router.get("/tutor/:tutorId", async (req, res) => {
   try {
+    const data = await Application.find({
+      tutorId: req.params.tutorId
+    }).populate("studentRequestId")
 
-    const tutor = new Tutor(req.body)
-
-    await tutor.save()
-
-    res.json({ message: "Tutor registered successfully" })
-
+    res.json(data)
   } catch (error) {
-
-    console.error(error)
-
-    res.status(500).json({ message: "Server error" })
-
+    res.status(500).json({ message: error.message })
   }
-
-})
-
-router.post("/tutor-login", async (req,res)=>{
-
-  const {email,password} = req.body
-
-  const tutor = await Tutor.findOne({email})
-
-  if(!tutor){
-    return res.json({message:"Tutor not found"})
-  }
-
-  if(tutor.password !== password){
-    return res.json({message:"Incorrect password"})
-  }
-
-  res.json({
-    message:"Login successful",
-    tutor
-  })
 })
 
 module.exports = router

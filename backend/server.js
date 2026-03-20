@@ -15,7 +15,7 @@ mongoose.connect(process.env.MONGO_URI)
 .then(()=>console.log("MongoDB Atlas Connected"))
 .catch(err=>console.log(err))
 
-app.use("/api", studentRoutes)
+app.use("/api", studentRoutes)  // ✅ ONLY THIS
 
 app.listen(5000, ()=>{
   console.log("Server running on port 5000")
