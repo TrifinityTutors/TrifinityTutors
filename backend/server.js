@@ -5,6 +5,7 @@ const cors = require("cors")
 const mongoose = require("mongoose")
 
 const studentRoutes = require("./routes/studentRoutes")
+const tutorRoutes = require("./routes/tutorRoutes");
 
 const app = express()
 
@@ -17,6 +18,7 @@ mongoose.connect(process.env.MONGO_URI)
 
 // routes
 app.use("/api", studentRoutes)
+app.use("/api", tutorRoutes);
 app.use("/api/auth", require("./routes/auth"))
 app.use("/api/tutors", require("./routes/tutorRoutes"))
 app.use("/api/students", require("./routes/studentRoutes"));

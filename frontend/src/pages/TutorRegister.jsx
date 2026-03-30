@@ -16,39 +16,38 @@ function TutorRegister() {
     setForm({ ...form, [e.target.name]: e.target.value })
   }
 
-  const handleSubmit = async (e) => {
-    e.preventDefault()
+ const handleSubmit = async (e) => {
+  e.preventDefault();
 
-    try {
+  try {
 
-      const response = await fetch("http://localhost:5000/api/tutor", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify(form)
-      })
+    const response = await fetch("http://localhost:5000/api/tutor", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${localStorage.getItem("token")}` // 🔥 ADD THIS
+      },
+      body: JSON.stringify(form)
+    });
 
-      const data = await response.json()
+    const data = await response.json();
 
-      alert(data.message)
+    alert(data.message || "Registered successfully");
 
-      // clear form after submit
-      setForm({
-        name: "",
-        email: "",
-        password: "",
-        subject: "",
-        locality: "",
-        experience: "",
-        phone: ""
-      })
+    setForm({
+      name: "",
+      email: "",
+      subject: "",
+      locality: "",
+      experience: "",
+      phone: ""
+    });
 
-    } catch (error) {
-      console.error(error)
-      alert("Error registering tutor")
-    }
+  } catch (error) {
+    console.error(error);
+    alert("Error registering tutor");
   }
+};
 
   return (
     <div>
@@ -69,15 +68,6 @@ function TutorRegister() {
           name="email"
           placeholder="Email"
           value={form.email}
-          onChange={handleChange}
-        />
-        <br /><br />
-
-        <input
-          name="password"
-          type="password"
-          placeholder="Password"
-          value={form.password}
           onChange={handleChange}
         />
         <br /><br />

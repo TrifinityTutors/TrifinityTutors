@@ -16,6 +16,11 @@ import MyApplications from "./pages/MyApplications"
 import Navbar from "./components/Navbar"
 import MainLayout from "./layouts/MainLayout"
 
+import CompleteProfile from "./pages/CompleteProfile";
+
+import ProtectedRoute from "./components/ProtectedRoute";
+
+
 function App() {
   return (
     <BrowserRouter>
@@ -36,11 +41,14 @@ function App() {
           </MainLayout>
         } />
 
-        <Route path="/tutor-register" element={
-          <MainLayout>
-            <TutorRegister />
-          </MainLayout>
-        } />
+        <Route
+          path="/tutor-register"
+          element={
+            <ProtectedRoute>
+              <TutorRegister />
+            </ProtectedRoute>
+          }
+        />
 
         <Route path="/dashboard" element={
           <MainLayout>
@@ -77,6 +85,8 @@ function App() {
             <Tutors />
           </AdminRoute>
         } />
+
+        <Route path="/complete-profile" element={<CompleteProfile />} />
 
       </Routes>
     </BrowserRouter>

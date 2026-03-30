@@ -11,12 +11,31 @@ export default function Tutors() {
   const fetchTutors = async () => {
     const res = await fetch("http://localhost:5000/api/tutors", {
       headers: {
-        Authorization: localStorage.getItem("token")
+        Authorization: `Bearer ${localStorage.getItem("token")}`
       }
     });
 
     const data = await res.json();
-    setTutors(data);
+
+    if (Array.isArray(data)) {
+      setTutors(data);
+    } else {
+      console.error("Error from backend:", data);
+      setTutors([]); // prevents crash
+    }
+  };
+
+  const updateStatus = async (id, status) => {
+    await fetch(`http://localhost:5000/api/tutor/${id}/status`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${localStorage.getItem("token")}`
+      },
+      body: JSON.stringify({ status })
+    });
+
+    fetchTutors(); // refresh list
   };
 
   return (
@@ -60,6 +79,37 @@ export default function Tutors() {
               <b>Location:</b>{" "}
               {t.locality && t.locality !== "" ? t.locality : "Not provided"}
             </p>
+
+            {/* 🔥 Status */}
+            <p>
+              <b>Status:</b>{" "}
+              <span
+                style={{
+                  color:
+                    t.status === "approved"
+                      ? "green"
+                      : t.status === "rejected"
+                      ? "red"
+                      : "orange"
+                }}
+              >
+                {t.status}
+              </span>
+            </p>
+
+            {/* 🔥 Buttons */}
+            <div style={{ marginTop: "10px" }}>
+              <button onClick={() => updateStatus(t._id, "approved")}>
+                ✅ Approve
+              </button>
+
+              <button
+                onClick={() => updateStatus(t._id, "rejected")}
+                style={{ marginLeft: "10px" }}
+              >
+                ❌ Reject
+              </button>
+            </div>
           </div>
         ))}
       </div>
