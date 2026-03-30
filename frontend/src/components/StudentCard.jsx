@@ -6,9 +6,15 @@ function StudentCard({ data }) {
 
   const handleApply = async () => {
     try {
-      const tutor = JSON.parse(localStorage.getItem("tutor"))
+      const token = localStorage.getItem("token");
+      const tutor = JSON.parse(localStorage.getItem("tutor"));
 
-      const response = await fetch("http://localhost:5000/api/apply", {
+      if (!token || !tutor || !tutor._id) {
+        alert("Please login to apply");
+        return;
+      }
+
+      const response = await fetch("http://localhost:5000/api/students/apply", {
         method: "POST",
         headers: {
           "Content-Type": "application/json"

@@ -70,13 +70,37 @@ router.get("/count", async (req, res) => {
 // Register tutor
 router.post("/tutor", async (req, res) => {
   try {
-    const tutor = new Tutor(req.body)
-    await tutor.save()
-    res.json({ message: "Tutor registered successfully" })
+    const { name, email, subject, locality, experience, phone } = req.body;
+
+    // 🔥 validation
+    if (!name || !email) {
+      return res.status(400).json({ message: "Name and Email required" });
+    }
+
+    const existing = await Tutor.findOne({ email });
+    if (existing) {
+      return res.json({ message: "Tutor already exists" });
+    }
+
+    const tutor = new Tutor({
+      name,
+      email,
+      subject,
+      locality,
+      experience,
+      phone,
+      status: "pending"
+    });
+
+    await tutor.save();
+
+    res.json({ message: "Tutor registered successfully", tutor });
+
   } catch (error) {
-    res.status(500).json({ message: "Server error" })
+    console.log("ERROR:", error); // 🔥 IMPORTANT
+    res.status(500).json({ message: "Server error" });
   }
-})
+});
 
 // Tutor login
 router.post("/tutor-login", async (req, res) => {
