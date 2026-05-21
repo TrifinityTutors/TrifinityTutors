@@ -1,4 +1,5 @@
 import { useState } from "react"
+import "./StudentRegister.css"
 
 function StudentRegister() {
 
@@ -9,73 +10,120 @@ function StudentRegister() {
     locality: ""
   })
 
+  const [isLoading, setIsLoading] = useState(false)
+
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value })
   }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+    
+    // Validate all fields
+    if (!form.name.trim() || !form.class.trim() || !form.subject.trim() || !form.locality.trim()) {
+      alert("❌ Please fill all fields")
+      return
+    }
+    
+    setIsLoading(true)
 
-    await fetch("http://localhost:5000/api/student",{
-      method:"POST",
-      headers:{
-        "Content-Type":"application/json"
-      },
-      body: JSON.stringify(form)
-    })
+    try {
+      const response = await fetch("http://localhost:5000/api/students/student", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(form)
+      })
 
-    alert("Student request submitted")
+      const data = await response.json()
+      console.log("Response:", data, "Status:", response.status)
 
-    // reset form
-    setForm({
-      name:"",
-      class:"",
-      subject:"",
-      locality:""
-    })
+      if (!response.ok) {
+        throw new Error(data.error || data.message || "Failed to submit")
+      }
+
+      alert("✅ Student request submitted successfully!")
+
+      // reset form
+      setForm({
+        name: "",
+        class: "",
+        subject: "",
+        locality: ""
+      })
+    } catch (error) {
+      console.error("Submit error:", error)
+      alert("❌ Error submitting form: " + error.message)
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (
-    <div>
-      <h2>Student Registration</h2>
+    <div className="register-container">
+      <div className="register-wrapper">
+        <div className="register-header">
+          <h1>Student Registration</h1>
+          <p className="subtitle">Find the perfect tutor for your learning journey</p>
+        </div>
 
-      <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit} className="register-form">
 
-        <input
-          name="name"
-          value={form.name}
-          placeholder="Name"
-          onChange={handleChange}
-        />
-        <br /><br />
+          <div className="form-group">
+            <label htmlFor="name">Full Name</label>
+            <input
+              id="name"
+              name="name"
+              value={form.name}
+              placeholder="Enter your full name"
+              onChange={handleChange}
+              required
+            />
+          </div>
 
-        <input
-          name="class"
-          value={form.class}
-          placeholder="Class"
-          onChange={handleChange}
-        />
-        <br /><br />
+          <div className="form-group">
+            <label htmlFor="class">Grade/Class</label>
+            <input
+              id="class"
+              name="class"
+              value={form.class}
+              placeholder="e.g., 10th, 12th, University"
+              onChange={handleChange}
+              required
+            />
+          </div>
 
-        <input
-          name="subject"
-          value={form.subject}
-          placeholder="Subject"
-          onChange={handleChange}
-        />
-        <br /><br />
+          <div className="form-group">
+            <label htmlFor="subject">Subject</label>
+            <input
+              id="subject"
+              name="subject"
+              value={form.subject}
+              placeholder="e.g., Mathematics, Physics, English"
+              onChange={handleChange}
+              required
+            />
+          </div>
 
-        <input
-          name="locality"
-          value={form.locality}
-          placeholder="Locality"
-          onChange={handleChange}
-        />
-        <br /><br />
+          <div className="form-group">
+            <label htmlFor="locality">Locality</label>
+            <input
+              id="locality"
+              name="locality"
+              value={form.locality}
+              placeholder="Enter your location or area"
+              onChange={handleChange}
+              required
+            />
+          </div>
 
-        <button type="submit">Submit</button>
+          <button type="submit" className="submit-btn" disabled={isLoading}>
+            {isLoading ? "Submitting..." : "Submit Request"}
+          </button>
 
-      </form>
+        </form>
+      </div>
     </div>
   )
 }

@@ -1,62 +1,117 @@
 import { useEffect, useState } from "react"
 import axios from "axios"
+import "./MyApplications.css"
 
 function MyApplications() {
 
   const [applications, setApplications] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
 
   const tutor = JSON.parse(localStorage.getItem("tutor"))
 
   useEffect(() => {
+    if (!tutor || !tutor._id) {
+      setError("Tutor data not found. Please log in again.")
+      setLoading(false)
+      return
+    }
     fetchApplications()
   }, [])
 
   const fetchApplications = async () => {
     try {
+      console.log("📋 Fetching applications for tutor:", {
+        tutorId: tutor?._id,
+        tutorEmail: tutor?.email,
+        tutorName: tutor?.name,
+        hasProfileComplete: tutor?.profileComplete,
+        tutorStatus: tutor?.status
+      });
+      
       const res = await axios.get(
-        `http://localhost:5000/api/tutor/${tutor._id}`
+        `http://localhost:5000/api/students/tutor/${tutor._id}`
       )
+      
+      console.log(`✅ Retrieved ${res.data.length} applications:`, res.data.map(app => ({
+        applicationId: app._id,
+        studentName: app.studentRequestId?.name,
+        studentId: app.studentRequestId?._id,
+        status: app.status
+      })))
+      
       setApplications(res.data)
+      setError(null)
     } catch (err) {
-      console.log(err)
+      console.error("❌ Error fetching applications:", err)
+      setError(err.response?.data?.message || err.message || "Failed to load applications")
+    } finally {
+      setLoading(false)
     }
   }
 
   return (
-    <div className="p-10">
-      <h1 className="text-2xl font-bold mb-5">My Applications</h1>
+    <div className="applications-container">
+      <div className="applications-header">
+        <div>
+          <h1>My Applications</h1>
+          <p className="subtitle">Track your student requests and application status</p>
+        </div>
+        <button onClick={fetchApplications} className="btn-refresh" disabled={loading}>
+          🔄 Refresh
+        </button>
+      </div>
 
-      {applications.length === 0 ? (
-        <p>No applications yet</p>
+      {loading ? (
+        <div className="loading">Loading applications...</div>
+      ) : error ? (
+        <div className="error-state">
+          <p className="error-icon">⚠️</p>
+          <p>Error loading applications</p>
+          <p className="error-subtitle">{error}</p>
+          <button onClick={fetchApplications}>Retry</button>
+        </div>
+      ) : applications.length === 0 ? (
+        <div className="empty-state">
+          <p className="empty-icon">📭</p>
+          <p>No applications yet</p>
+          <p className="empty-subtitle">Check back soon for student requests</p>
+        </div>
       ) : (
-        applications.map((app) => (
-          <div key={app._id} className="border p-5 mb-3 rounded">
+        <div className="applications-grid">
+          {applications.map((app) => (
+            <div key={app._id} className={`application-card status-${app.status}`}>
+              <div className="card-header">
+                <h2>{app.studentRequestId?.name || "Unknown Student"}</h2>
+                <span className={`status-badge status-${app.status}`}>
+                  {app.status === "pending" ? "⏳ Waiting" : app.status === "approved" ? "✅ Approved" : "❌ Rejected"}
+                </span>
+              </div>
 
-            <h2 className="text-lg font-semibold">
-              {app.studentRequestId?.subject}
-            </h2>
+              <div className="card-body">
+                <div className="info-row">
+                  <span className="info-label">📚 Subject:</span>
+                  <span className="info-value">{app.studentRequestId?.subject}</span>
+                </div>
 
-            <p>Name: {app.studentRequestId?.name}</p>
-<p>Class: {app.studentRequestId?.class}</p>
-<p>Subject: {app.studentRequestId?.subject}</p>
-<p>Locality: {app.studentRequestId?.locality}</p>
-<p>Time: {app.studentRequestId?.time}</p>
+                <div className="info-row">
+                  <span className="info-label">📖 Grade:</span>
+                  <span className="info-value">{app.studentRequestId?.class}</span>
+                </div>
 
-            <p className="mt-2">
-              Status:
-              <span className={
-                app.status === "accepted"
-                  ? "text-green-500"
-                  : app.status === "rejected"
-                  ? "text-red-500"
-                  : "text-yellow-500"
-              }>
-                {" "}{app.status}
-              </span>
-            </p>
+                <div className="info-row">
+                  <span className="info-label">📍 Location:</span>
+                  <span className="info-value">{app.studentRequestId?.locality}</span>
+                </div>
 
-          </div>
-        ))
+                <div className="info-row">
+                  <span className="info-label">⏰ Preferred Time:</span>
+                  <span className="info-value">{app.studentRequestId?.time || "Flexible"}</span>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
       )}
     </div>
   )

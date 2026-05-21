@@ -44,13 +44,21 @@ function App() {
         <Route
           path="/tutor-register"
           element={
-            <ProtectedRoute>
-              <TutorRegister />
-            </ProtectedRoute>
+            <MainLayout>
+              <ProtectedRoute>
+                <TutorRegister />
+              </ProtectedRoute>
+            </MainLayout>
           }
         />
 
         <Route path="/dashboard" element={
+          <MainLayout>
+            <TutorDashboard />
+          </MainLayout>
+        } />
+
+        <Route path="/tutor-dashboard" element={
           <MainLayout>
             <TutorDashboard />
           </MainLayout>
@@ -86,7 +94,13 @@ function App() {
           </AdminRoute>
         } />
 
-        <Route path="/complete-profile" element={<CompleteProfile />} />
+        <Route path="/complete-profile" element={
+          <MainLayout>
+            <ProtectedRoute>
+              <CompleteProfile />
+            </ProtectedRoute>
+          </MainLayout>
+        } />
 
       </Routes>
     </BrowserRouter>

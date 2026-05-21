@@ -1,27 +1,35 @@
 import { useEffect, useState } from "react";
 import Sidebar from "../components/Sidebar";
+import "../styles/AdminStudents.css"
 
 export default function Students() {
   const [students, setStudents] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     fetchStudents();
   }, []);
 
-  // 🔥 FETCH STUDENTS WITH APPLICATIONS
   const fetchStudents = async () => {
-    const res = await fetch("http://localhost:5000/api/students/with-applications", {
-      headers: {
-        Authorization: localStorage.getItem("token")
-      }
-    });
+    try {
+      const res = await fetch("http://localhost:5000/api/students/with-applications", {
+        headers: {
+          Authorization: localStorage.getItem("token")
+        }
+      });
 
-    const data = await res.json();
-    setStudents(data);
+      const data = await res.json();
+      setStudents(data);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  // ❌ DELETE STUDENT
   const deleteStudent = async (id) => {
+    if (!window.confirm("Are you sure you want to delete this student?")) return;
+
     await fetch(`http://localhost:5000/api/students/${id}`, {
       method: "DELETE",
       headers: {
@@ -32,7 +40,6 @@ export default function Students() {
     fetchStudents();
   };
 
-  // ➕ ADD STUDENT (dummy)
   const addStudent = async () => {
     await fetch("http://localhost:5000/api/students/student", {
       method: "POST",
@@ -50,133 +57,150 @@ export default function Students() {
     fetchStudents();
   };
 
-  // ✅ APPROVE TUTOR
   const approveTutor = async (id) => {
-    await fetch(`http://localhost:5000/api/students/approve/${id}`, {
-      method: "PUT",
-      headers: {
-        Authorization: localStorage.getItem("token")
-      }
-    });
+    try {
+      const response = await fetch(`http://localhost:5000/api/students/approve/${id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: localStorage.getItem("token")
+        }
+      });
 
-    fetchStudents();
+      const data = await response.json();
+      
+      if (response.ok) {
+        alert("✅ Tutor approved successfully!");
+        fetchStudents();
+      } else {
+        alert("Error: " + (data.msg || data.message || "Failed to approve"));
+      }
+    } catch (err) {
+      console.error("Approve error:", err);
+      alert("Error approving tutor: " + err.message);
+    }
   };
 
-  // ❌ REJECT TUTOR
   const rejectTutor = async (id) => {
-    await fetch(`http://localhost:5000/api/students/reject/${id}`, {
-      method: "PUT",
-      headers: {
-        Authorization: localStorage.getItem("token")
-      }
-    });
+    try {
+      const response = await fetch(`http://localhost:5000/api/students/reject/${id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: localStorage.getItem("token")
+        }
+      });
 
-    fetchStudents();
+      const data = await response.json();
+      
+      if (response.ok) {
+        alert("❌ Tutor rejected successfully!");
+        fetchStudents();
+      } else {
+        alert("Error: " + (data.msg || data.message || "Failed to reject"));
+      }
+    } catch (err) {
+      console.error("Reject error:", err);
+      alert("Error rejecting tutor: " + err.message);
+    }
   };
 
   return (
-    <div style={{ display: "flex" }}>
+    <div className="admin-layout">
       <Sidebar />
 
-      <div style={{ padding: "20px", width: "100%" }}>
-        <h1>Students</h1>
+      <div className="admin-content">
+        <div className="page-header">
+          <div>
+            <h1>Student Management</h1>
+            <p className="subtitle">Manage students and their tutor applications</p>
+          </div>
+          <button onClick={addStudent} className="btn-add">+ Add Student</button>
+        </div>
 
-        <button onClick={addStudent}>Add Student</button>
-
-        {students.map((s) => (
-          <div
-            key={s._id}
-            style={{
-              border: "1px solid #ddd",
-              padding: "15px",
-              margin: "15px 0",
-              borderRadius: "10px",
-              boxShadow: "0 2px 8px rgba(0,0,0,0.1)"
-            }}
-          >
-            {/* STUDENT INFO */}
-            <h3>{s.name}</h3>
-            <p>Class: {s.class}</p>
-            <p>Subject: {s.subject}</p>
-
-            {/* DELETE BUTTON */}
-            <button onClick={() => deleteStudent(s._id)}>
-              Delete
-            </button>
-
-            <hr />
-
-            {/* ✅ SHOW SELECTED TUTOR */}
-            {s.applications &&
-              s.applications
-                .filter((app) => app.status === "accepted")
-                .map((app) => (
-                  <p
-                    key={app._id}
-                    style={{
-                      color: "green",
-                      fontWeight: "bold"
-                    }}
+        {loading ? (
+          <div className="loading">Loading students...</div>
+        ) : students.length === 0 ? (
+          <div className="empty-state">
+            <p>No students found</p>
+          </div>
+        ) : (
+          <div className="students-list">
+            {students.map((s) => (
+              <div key={s._id} className="student-card">
+                <div className="student-header">
+                  <div>
+                    <h3>{s.name}</h3>
+                    <div className="student-meta">
+                      <span className="badge">📚 {s.class}</span>
+                      <span className="badge">🎓 {s.subject}</span>
+                    </div>
+                  </div>
+                  <button 
+                    onClick={() => deleteStudent(s._id)}
+                    className="btn-delete"
                   >
-                    ✅ Selected Tutor: {app.tutorName}
-                  </p>
-                ))}
+                    Delete
+                  </button>
+                </div>
 
-            {/* APPLICATIONS */}
-            <h4>Applied Tutors:</h4>
+                {/* SHOW SELECTED TUTOR */}
+                {s.applications &&
+                  s.applications
+                    .filter((app) => app.status === "accepted")
+                    .map((app) => (
+                      <div key={app._id} className="selected-tutor">
+                        ✅ Selected Tutor: <strong>{app.tutorName}</strong>
+                      </div>
+                    ))}
 
-            {s.applications && s.applications.length === 0 && (
-              <p>No applications</p>
-            )}
+                {/* APPLICATIONS */}
+                <div className="applications-section">
+                  <h4>Applied Tutors ({s.applications?.length || 0})</h4>
 
-            {s.applications &&
-              s.applications.map((app) => (
-                <div
-                  key={app._id}
-                  style={{
-                    marginBottom: "10px",
-                    padding: "8px",
-                    border: "1px solid #eee",
-                    borderRadius: "6px"
-                  }}
-                >
-                  <p>
-                    👨‍🏫 {app.tutorName} —{" "}
-                    <b
-                      style={{
-                        color:
-                          app.status === "accepted"
-                            ? "green"
-                            : app.status === "rejected"
-                            ? "red"
-                            : "orange"
-                      }}
-                    >
-                      {app.status}
-                    </b>
-                  </p>
+                  {s.applications && s.applications.length === 0 ? (
+                    <p className="no-apps">No tutor applications yet</p>
+                  ) : (
+                    <div className="applications-list">
+                      {s.applications &&
+                        s.applications.map((app) => (
+                          <div key={app._id} className={`application-item status-${app.status}`}>
+                            <div className="app-info">
+                              <p className="tutor-name">👨‍🏫 {app.tutorName || "Unknown Tutor"}</p>
+                              <p className="tutor-email" style={{fontSize: '12px', color: '#666', margin: '4px 0 0 0'}}>
+                                {app.tutorEmail || ""}
+                              </p>
+                              <span className={`status-badge status-${app.status}`}>
+                                {app.status?.toUpperCase() || "PENDING"}
+                              </span>
+                            </div>
 
-                  {/* SHOW BUTTONS ONLY IF PENDING */}
-                  {app.status === "pending" && (
-                    <>
-                      <button
-                        onClick={() => approveTutor(app._id)}
-                        style={{ marginRight: "10px" }}
-                      >
-                        ✅ Approve
-                      </button>
+                            {app.status === "pending" && (
+                              <div className="app-actions">
+                                <button
+                                  onClick={() => approveTutor(app._id)}
+                                  className="btn-approve"
+                                >
+                                  ✅ Approve
+                                </button>
 
-                      <button
-                        onClick={() => rejectTutor(app._id)}
-                      >
-                        ❌ Reject
-                      </button>
-                    </>
+                                <button
+                                  onClick={() => rejectTutor(app._id)}
+                                  className="btn-reject"
+                                >
+                                  ❌ Reject
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                    </div>
                   )}
                 </div>
-              ))}
+              </div>
+            ))}
           </div>
-        ))}
+        )}
       </div>
     </div>
   );

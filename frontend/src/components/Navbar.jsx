@@ -1,30 +1,57 @@
-import { Link } from "react-router-dom"
+import { Link, useNavigate } from "react-router-dom"
+import "./Navbar.css"
 
 function Navbar() {
+  const token = localStorage.getItem("token")
+  const navigate = useNavigate()
+
+  const handleLogout = () => {
+    localStorage.removeItem("token")
+    localStorage.removeItem("tutor")
+    navigate("/")
+  }
+
   return (
-    <div className="bg-white shadow px-8 py-4 flex justify-between items-center">
-
-      {/* Logo */}
-      <h1 className="text-xl font-bold text-blue-600">
-        Trifinity Tutors
-      </h1>
-
-      {/* Links */}
-      <div className="space-x-6">
-        <Link to="/" className="text-gray-700 hover:text-blue-600">
-          Home
+    <nav className="navbar">
+      <div className="navbar-container">
+        <Link to="/" className="navbar-logo">
+          <span className="logo-icon">🎓</span>
+          Trifinity Tutors
         </Link>
 
-        <Link to="/dashboard" className="text-gray-700 hover:text-blue-600">
-          Dashboard
-        </Link>
+        <div className="navbar-menu">
+          {token ? (
+            <>
+              <Link to="/dashboard" className="nav-link">
+                Dashboard
+              </Link>
 
-        <Link to="/my-applications" className="text-gray-700 hover:text-blue-600">
-          Applications
-        </Link>
+              <Link to="/my-applications" className="nav-link">
+                My Applications
+              </Link>
+
+              <button onClick={handleLogout} className="logout-link">
+                Logout
+              </button>
+            </>
+          ) : (
+            <>
+              <Link to="/" className="nav-link">
+                Home
+              </Link>
+
+              <Link to="/student-register" className="nav-link">
+                Student
+              </Link>
+
+              <Link to="/tutor-login" className="nav-link">
+                Tutor
+              </Link>
+            </>
+          )}
+        </div>
       </div>
-
-    </div>
+    </nav>
   )
 }
 

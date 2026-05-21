@@ -1,4 +1,5 @@
 import { Link, useNavigate } from "react-router-dom";
+import "../styles/Sidebar.css"
 
 export default function Sidebar() {
   const navigate = useNavigate();
@@ -9,14 +10,31 @@ export default function Sidebar() {
   };
 
   return (
-    <div style={{ width: "200px", borderRight: "1px solid black" }}>
-      <h3>Admin Panel</h3>
+    <div className="sidebar">
+      <div className="sidebar-header">
+        <h2>🎓 Admin Panel</h2>
+      </div>
 
-      <Link to="/admin/dashboard">Dashboard</Link><br />
-      <Link to="/admin/students">Students</Link><br />
-      <Link to="/admin/tutors">Tutors</Link><br />
+      <nav className="sidebar-menu">
+        <Link to="/admin/dashboard" className="sidebar-link">
+          <span className="icon">📊</span>
+          Dashboard
+        </Link>
 
-      <button onClick={logout}>Logout</button>
+        <Link to="/admin/students" className="sidebar-link">
+          <span className="icon">👥</span>
+          Students
+        </Link>
+
+        <Link to="/admin/tutors" className="sidebar-link">
+          <span className="icon">👨‍🏫</span>
+          Tutors
+        </Link>
+      </nav>
+
+      <button onClick={logout} className="logout-btn">
+        🚪 Logout
+      </button>
     </div>
   );
 }

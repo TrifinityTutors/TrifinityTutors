@@ -1,64 +1,57 @@
 import { Link } from "react-router-dom"
+import "./Home.css"
 
 function Home() {
   return (
-    <div className="text-center py-20">
+    <div className="home-container">
+      {/* HERO SECTION */}
+      <section className="hero-section">
+        <div className="hero-content">
+          <h1 className="hero-title">
+            Find the Perfect Home Tutor
+          </h1>
 
-      {/* HERO TITLE */}
-      <h1 className="text-5xl font-bold text-gray-800 mb-6">
-        Find the Perfect Home Tutor
-      </h1>
+          <p className="hero-subtitle">
+            Connect with experienced tutors near you and boost your learning experience.
+          </p>
 
-      {/* SUBTITLE */}
-      <p className="text-lg text-gray-600 mb-10 max-w-2xl mx-auto">
-        Connect with experienced tutors near you and boost your learning experience.
-      </p>
+          {/* CTA BUTTONS */}
+          <div className="cta-buttons">
+            <Link to="/student-register" className="btn btn-student">
+              📚 Register as Student
+            </Link>
 
-      {/* BUTTONS */}
-      <div className="flex justify-center gap-6">
-
-        <Link
-          to="/student-register"
-          className="bg-green-500 hover:bg-green-600 text-white px-6 py-3 rounded-lg shadow"
-        >
-          Register as Student
-        </Link>
-
-        <Link
-          to="/tutor-register"
-          className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg shadow"
-        >
-          Register as Tutor
-        </Link>
-
-      </div>
+            <Link to="/tutor-login" className="btn btn-tutor">
+              👨‍🏫 Register as Tutor
+            </Link>
+          </div>
+        </div>
+      </section>
 
       {/* FEATURES SECTION */}
-      <div className="mt-20 grid md:grid-cols-3 gap-8 px-10">
+      <section className="features-section">
+        <h2 className="section-title">Why Choose Trifinity Tutors?</h2>
+        
+        <div className="features-grid">
+          <div className="feature-card">
+            <div className="feature-icon">✓</div>
+            <h3>Verified Tutors</h3>
+            <p>Learn from experienced and verified teachers with proven track records.</p>
+          </div>
 
-        <div className="bg-white p-6 rounded-xl shadow">
-          <h3 className="font-bold text-lg mb-2">Verified Tutors</h3>
-          <p className="text-gray-600">
-            Learn from experienced and verified teachers.
-          </p>
+          <div className="feature-card">
+            <div className="feature-icon">⏱️</div>
+            <h3>Flexible Learning</h3>
+            <p>Choose your schedule and preferred learning style that works for you.</p>
+          </div>
+
+          <div className="feature-card">
+            <div className="feature-icon">💰</div>
+            <h3>Affordable Pricing</h3>
+            <p>Find tutors that fit your budget without compromising quality.</p>
+          </div>
         </div>
-
-        <div className="bg-white p-6 rounded-xl shadow">
-          <h3 className="font-bold text-lg mb-2">Flexible Learning</h3>
-          <p className="text-gray-600">
-            Choose your schedule and preferred learning style.
-          </p>
-        </div>
-
-        <div className="bg-white p-6 rounded-xl shadow">
-          <h3 className="font-bold text-lg mb-2">Affordable Pricing</h3>
-          <p className="text-gray-600">
-            Find tutors that fit your budget.
-          </p>
-        </div>
-
-      </div>
-
+      </section>
     </div>
   )
 }

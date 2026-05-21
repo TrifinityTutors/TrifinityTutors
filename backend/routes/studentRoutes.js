@@ -11,9 +11,38 @@ const auth = require("../middleware/auth");
 
 // Create student request
 router.post("/student", async (req, res) => {
-  const data = new StudentRequest(req.body)
-  await data.save()
-  res.json({ message: "Student request saved" })
+  try {
+    const { name, class: studentClass, subject, locality } = req.body
+    
+    // Validate required fields
+    if (!name || !studentClass || !subject || !locality) {
+      return res.status(400).json({ 
+        error: "All fields (name, class, subject, locality) are required" 
+      })
+    }
+    
+    const data = new StudentRequest({
+      name: name.trim(),
+      class: studentClass.trim(),
+      subject: subject.trim(),
+      locality: locality.trim()
+    })
+    
+    await data.save()
+    console.log("Student request saved:", data)
+    
+    res.json({ 
+      message: "Student request saved",
+      success: true,
+      studentId: data._id
+    })
+  } catch (error) {
+    console.error("Error saving student request:", error)
+    res.status(500).json({ 
+      error: error.message || "Error saving student request",
+      success: false
+    })
+  }
 })
 router.get("/studentrequests", async (req, res) => {
   try {
@@ -29,15 +58,35 @@ router.get("/with-applications", async (req, res) => {
   try {
     const students = await StudentRequest.find();
 
-    const applications = await Application.find().populate("tutorId");
+    // Get all applications with populated tutor data
+    const applications = await Application.find().populate({
+      path: "tutorId",
+      select: "name email subject"
+    });
+
+    console.log("Total applications found:", applications.length);
 
     const data = students.map(student => {
       const studentApps = applications
-      .filter(app => app.studentRequestId.toString() === student._id.toString())
-      .map(app => ({
-        ...app._doc,
-        tutorName: app.tutorId?.name
-      }));
+        .filter(app => app.studentRequestId && app.studentRequestId.toString() === student._id.toString())
+        .map(app => {
+          // Debug: log if tutor data is missing
+          if (!app.tutorId) {
+            console.warn(`⚠️ Application ${app._id} has no tutorId or tutor not found`);
+          }
+          if (!app.tutorId?.name) {
+            console.warn(`⚠️ Tutor ${app.tutorId?._id} has no name field`);
+          }
+
+          return {
+            _id: app._id,
+            tutorId: app.tutorId?._id || "No ID",
+            tutorName: app.tutorId?.name || (app.tutorId?._id ? "Name Missing" : "Unknown Tutor"),
+            tutorEmail: app.tutorId?.email || "No Email",
+            status: app.status,
+            createdAt: app.createdAt
+          };
+        });
 
       return {
         ...student._doc,
@@ -48,7 +97,7 @@ router.get("/with-applications", async (req, res) => {
     res.json(data);
 
   } catch (err) {
-    console.error(err);
+    console.error("Error fetching students with applications:", err);
     res.status(500).json({ error: err.message });
   }
 });
@@ -116,9 +165,13 @@ router.post("/tutor-login", async (req, res) => {
     return res.json({ message: "Incorrect password" })
   }
 
+  // Generate a simple token (in production, use JWT)
+  const token = `token_${tutor._id}_${Date.now()}`
+
   res.json({
     message: "Login successful",
-    tutor
+    token: token,
+    user: tutor
   })
 })
 
@@ -128,27 +181,60 @@ router.post("/tutor-login", async (req, res) => {
 // Apply to student
 router.post("/apply", async (req, res) => {
   try {
-    const { tutorId, studentRequestId } = req.body;
+    const { tutorId, studentRequestId, tutorEmail } = req.body;
+
+    console.log("Apply request received:", { tutorId, studentRequestId, tutorEmail });
+
+    if (!studentRequestId) {
+      return res.status(400).json({ message: "Student ID required" });
+    }
+
+    // If email is provided, look up the tutor by email
+    let actualTutorId = tutorId;
+    if (tutorEmail) {
+      const tutor = await Tutor.findOne({ email: tutorEmail });
+      if (tutor) {
+        actualTutorId = tutor._id;
+        console.log("Found tutor by email:", tutor.name, tutor._id, "Status:", tutor.status);
+      } else {
+        console.warn("Tutor not found by email:", tutorEmail);
+        console.log("Available tutors with this email pattern:");
+        const allTutors = await Tutor.find({ email: tutorEmail });
+        console.log("Exact match tutors:", allTutors);
+      }
+    }
+
+    if (!actualTutorId) {
+      return res.status(400).json({ message: "Invalid tutor ID" });
+    }
 
     const existing = await Application.findOne({
-      tutorId,
+      tutorId: actualTutorId,
       studentRequestId
     });
 
     if (existing) {
+      console.log("Application already exists:", existing._id);
       return res.json({ message: "Already applied" });
     }
 
     const application = new Application({
-      tutorId,
+      tutorId: actualTutorId,
       studentRequestId
     });
 
     await application.save();
+    console.log("✅ Application created successfully:", {
+      applicationId: application._id,
+      tutorId: actualTutorId,
+      studentRequestId: studentRequestId,
+      status: application.status
+    });
 
     res.json({ message: "Application submitted" });
 
   } catch (err) {
+    console.error("Apply error:", err);
     res.status(500).json({ error: err.message });
   }
 });
@@ -157,15 +243,57 @@ router.post("/apply", async (req, res) => {
 // Get tutor applications (MyApplications)
 router.get("/tutor/:tutorId", async (req, res) => {
   try {
-    const data = await Application.find({
-      tutorId: req.params.tutorId
-    }).populate("studentRequestId")
+    const tutorId = req.params.tutorId;
+    
+    console.log("🔍 Fetching applications for tutor ID:", tutorId);
 
-    res.json(data)
+    // First, try to find applications by the provided ID (assumes it's Tutor._id)
+    let data = await Application.find({
+      tutorId: tutorId
+    }).populate("studentRequestId");
+
+    console.log(`Direct lookup: Found ${data.length} applications`);
+
+    // If no applications found, the ID might be from Tutoruser, so try email-based lookup
+    if (data.length === 0) {
+      console.log("Direct lookup found nothing, attempting Tutoruser->Tutor lookup...");
+      
+      try {
+        const Tutoruser = require("../models/Tutoruser");
+        const tutoruser = await Tutoruser.findById(tutorId);
+        
+        if (tutoruser && tutoruser.email) {
+          console.log("Found Tutoruser:", tutoruser.name, "Email:", tutoruser.email);
+          
+          const tutor = await Tutor.findOne({ email: tutoruser.email });
+          
+          if (tutor) {
+            console.log("✅ Found Tutor by email lookup:", tutor.name, "ID:", tutor._id);
+            
+            data = await Application.find({
+              tutorId: tutor._id
+            }).populate("studentRequestId");
+            
+            console.log(`Email-based lookup: Found ${data.length} applications for tutor ${tutor._id}`);
+          } else {
+            console.warn("⚠️ Tutor not found by email:", tutoruser.email);
+          }
+        } else {
+          console.warn("⚠️ Tutoruser not found with ID:", tutorId);
+        }
+      } catch (tutorLookupErr) {
+        console.error("Error during Tutoruser lookup:", tutorLookupErr.message);
+      }
+    }
+
+    console.log(`Total applications to return: ${data.length}`);
+    
+    res.json(data);
   } catch (error) {
-    res.status(500).json({ message: error.message })
+    console.error("❌ Error fetching applications:", error);
+    res.status(500).json({ message: error.message });
   }
-})
+});
 
 // ✅ APPROVE tutor application
 router.put("/approve/:id", async (req, res) => {

@@ -1,117 +1,167 @@
 import { useEffect, useState } from "react";
 import Sidebar from "../components/Sidebar";
+import "../styles/AdminTutors.css"
 
 export default function Tutors() {
   const [tutors, setTutors] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     fetchTutors();
   }, []);
 
   const fetchTutors = async () => {
-    const res = await fetch("http://localhost:5000/api/tutors", {
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem("token")}`
+    try {
+      const res = await fetch("http://localhost:5000/api/tutors", {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`
+        }
+      });
+
+      const data = await res.json();
+
+      if (Array.isArray(data)) {
+        setTutors(data);
+      } else {
+        console.error("Error from backend:", data);
+        setTutors([]);
       }
-    });
-
-    const data = await res.json();
-
-    if (Array.isArray(data)) {
-      setTutors(data);
-    } else {
-      console.error("Error from backend:", data);
-      setTutors([]); // prevents crash
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
     }
   };
 
   const updateStatus = async (id, status) => {
-    await fetch(`http://localhost:5000/api/tutor/${id}/status`, {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${localStorage.getItem("token")}`
-      },
-      body: JSON.stringify({ status })
-    });
+    try {
+      const response = await fetch(`http://localhost:5000/api/tutors/${id}/status`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("token")}`
+        },
+        body: JSON.stringify({ status })
+      });
 
-    fetchTutors(); // refresh list
+      const data = await response.json();
+
+      if (response.ok) {
+        alert(`✅ Tutor ${status} successfully!`);
+        fetchTutors();
+      } else {
+        alert("Error: " + (data.error || data.message || "Failed to update"));
+      }
+    } catch (err) {
+      console.error("Update error:", err);
+      alert("Error updating tutor: " + err.message);
+    }
+  };
+
+  const deleteTutor = async (id, name) => {
+    if (!window.confirm(`Are you sure you want to delete ${name}?`)) return;
+
+    try {
+      const response = await fetch(`http://localhost:5000/api/tutors/${id}`, {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("token")}`
+        }
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        alert("✅ Tutor deleted successfully!");
+        fetchTutors();
+      } else {
+        alert("Error: " + (data.error || data.message || "Failed to delete"));
+      }
+    } catch (err) {
+      console.error("Delete error:", err);
+      alert("Error deleting tutor: " + err.message);
+    }
   };
 
   return (
-    <div style={{ display: "flex" }}>
+    <div className="admin-layout">
       <Sidebar />
 
-      <div style={{ padding: "20px", width: "100%" }}>
-        <h1>All Tutors</h1>
-
-        {tutors.map((t) => (
-          <div
-            key={t._id}
-            style={{
-              border: "1px solid #ddd",
-              padding: "15px",
-              margin: "10px 0",
-              borderRadius: "10px",
-              boxShadow: "0 2px 8px rgba(0,0,0,0.1)"
-            }}
-          >
-            <h3>👨‍🏫 {t.name}</h3>
-
-            <p><b>Email:</b> {t.email}</p>
-
-            <p>
-              <b>Subject:</b>{" "}
-              {t.subject && t.subject !== "" ? t.subject : "Not provided"}
-            </p>
-
-            <p>
-              <b>Experience:</b>{" "}
-              {t.experience ? `${t.experience} years` : "Not provided"}
-            </p>
-
-            <p>
-              <b>Phone:</b>{" "}
-              {t.phone && t.phone !== "" ? t.phone : "Not provided"}
-            </p>
-
-            <p>
-              <b>Location:</b>{" "}
-              {t.locality && t.locality !== "" ? t.locality : "Not provided"}
-            </p>
-
-            {/* 🔥 Status */}
-            <p>
-              <b>Status:</b>{" "}
-              <span
-                style={{
-                  color:
-                    t.status === "approved"
-                      ? "green"
-                      : t.status === "rejected"
-                      ? "red"
-                      : "orange"
-                }}
-              >
-                {t.status}
-              </span>
-            </p>
-
-            {/* 🔥 Buttons */}
-            <div style={{ marginTop: "10px" }}>
-              <button onClick={() => updateStatus(t._id, "approved")}>
-                ✅ Approve
-              </button>
-
-              <button
-                onClick={() => updateStatus(t._id, "rejected")}
-                style={{ marginLeft: "10px" }}
-              >
-                ❌ Reject
-              </button>
-            </div>
+      <div className="admin-content">
+        <div className="page-header">
+          <div>
+            <h1>Tutor Management</h1>
+            <p className="subtitle">Review and manage all tutors on the platform</p>
           </div>
-        ))}
+        </div>
+
+        {loading ? (
+          <div className="loading">Loading tutors...</div>
+        ) : tutors.length === 0 ? (
+          <div className="empty-state">
+            <p>No tutors found</p>
+          </div>
+        ) : (
+          <div className="tutors-list">
+            {tutors.map((t) => (
+              <div key={t._id} className={`tutor-card status-${t.status}`}>
+                <div className="tutor-header">
+                  <div className="tutor-name">
+                    <h3>👨‍🏫 {t.name}</h3>
+                    <span className={`status-badge status-${t.status}`}>
+                      {t.status ? t.status.toUpperCase() : "PENDING"}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="tutor-info">
+                  <div className="info-row">
+                    <span className="label">📧 Email:</span>
+                    <span className="value">{t.email}</span>
+                  </div>
+
+                  <div className="info-row">
+                    <span className="label">🎓 Subject:</span>
+                    <span className="value">
+                      {t.subject && t.subject !== "" ? t.subject : "Not provided"}
+                    </span>
+                  </div>
+
+                  <div className="info-row">
+                    <span className="label">⏱️ Experience:</span>
+                    <span className="value">
+                      {t.experience ? `${t.experience} years` : "Not provided"}
+                    </span>
+                  </div>
+
+                  <div className="info-row">
+                    <span className="label">📞 Phone:</span>
+                    <span className="value">
+                      {t.phone && t.phone !== "" ? t.phone : "Not provided"}
+                    </span>
+                  </div>
+
+                  <div className="info-row">
+                    <span className="label">📍 Location:</span>
+                    <span className="value">
+                      {t.locality && t.locality !== "" ? t.locality : "Not provided"}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="tutor-actions">
+                  <button 
+                    onClick={() => deleteTutor(t._id, t.name)}
+                    className="btn-delete"
+                  >
+                    🗑️ Delete
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

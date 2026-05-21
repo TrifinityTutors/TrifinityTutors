@@ -1,5 +1,6 @@
 import { useState } from "react";
 import axios from "axios";
+import "./CompleteProfile.css"
 
 export default function CompleteProfile() {
   const [formData, setFormData] = useState({
@@ -47,90 +48,78 @@ export default function CompleteProfile() {
   };
 
   return (
-    <div
-      style={{
-        maxWidth: "500px",
-        margin: "50px auto",
-        padding: "30px",
-        border: "1px solid #ddd",
-        borderRadius: "10px",
-        boxShadow: "0 2px 10px rgba(0,0,0,0.1)",
-      }}
-    >
-      <h2 style={{ textAlign: "center", marginBottom: "20px" }}>
-        Complete Your Tutor Profile
-      </h2>
-
-      <form onSubmit={handleSubmit}>
-        {/* Subject */}
-        <div style={{ marginBottom: "15px" }}>
-          <label>Subject</label>
-          <input
-            type="text"
-            name="subject"
-            value={formData.subject}
-            onChange={handleChange}
-            required
-            style={{ width: "100%", padding: "8px", marginTop: "5px" }}
-          />
+    <div className="complete-profile-container">
+      <div className="complete-profile-wrapper">
+        <div className="profile-header">
+          <h1>Complete Your Tutor Profile</h1>
+          <p className="subtitle">Let students know more about you</p>
         </div>
 
-        {/* Experience */}
-        <div style={{ marginBottom: "15px" }}>
-          <label>Experience (in years)</label>
-          <input
-            type="number"
-            name="experience"
-            value={formData.experience}
-            onChange={handleChange}
-            required
-            style={{ width: "100%", padding: "8px", marginTop: "5px" }}
-          />
-        </div>
+        <form onSubmit={handleSubmit} className="profile-form">
+          
+          <div className="form-group">
+            <label htmlFor="subject">Subject</label>
+            <input
+              id="subject"
+              type="text"
+              name="subject"
+              placeholder="e.g., Mathematics, Physics"
+              value={formData.subject}
+              onChange={handleChange}
+              required
+            />
+          </div>
 
-        {/* Phone */}
-        <div style={{ marginBottom: "15px" }}>
-          <label>Phone Number</label>
-          <input
-            type="text"
-            name="phone"
-            value={formData.phone}
-            onChange={handleChange}
-            required
-            style={{ width: "100%", padding: "8px", marginTop: "5px" }}
-          />
-        </div>
+          <div className="form-row">
+            <div className="form-group">
+              <label htmlFor="experience">Experience (Years)</label>
+              <input
+                id="experience"
+                type="number"
+                name="experience"
+                placeholder="e.g., 5"
+                value={formData.experience}
+                onChange={handleChange}
+                required
+              />
+            </div>
 
-        {/* Locality */}
-        <div style={{ marginBottom: "15px" }}>
-          <label>Location / Locality</label>
-          <input
-            type="text"
-            name="locality"
-            value={formData.locality}
-            onChange={handleChange}
-            required
-            style={{ width: "100%", padding: "8px", marginTop: "5px" }}
-          />
-        </div>
+            <div className="form-group">
+              <label htmlFor="phone">Phone Number</label>
+              <input
+                id="phone"
+                type="tel"
+                name="phone"
+                placeholder="10-digit number"
+                value={formData.phone}
+                onChange={handleChange}
+                required
+              />
+            </div>
+          </div>
 
-        {/* Submit */}
-        <button
-          type="submit"
-          disabled={loading}
-          style={{
-            width: "100%",
-            padding: "10px",
-            background: "#4CAF50",
-            color: "#fff",
-            border: "none",
-            borderRadius: "5px",
-            cursor: "pointer",
-          }}
-        >
-          {loading ? "Submitting..." : "Submit"}
-        </button>
-      </form>
+          <div className="form-group">
+            <label htmlFor="locality">Location / Locality</label>
+            <input
+              id="locality"
+              type="text"
+              name="locality"
+              placeholder="Where are you located?"
+              value={formData.locality}
+              onChange={handleChange}
+              required
+            />
+          </div>
+
+          <button
+            type="submit"
+            disabled={loading}
+            className="submit-btn"
+          >
+            {loading ? "Completing Profile..." : "Complete Profile"}
+          </button>
+        </form>
+      </div>
     </div>
   );
 }
