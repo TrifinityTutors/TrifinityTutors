@@ -30,6 +30,11 @@ export default function Sidebar() {
           <span className="icon">👨‍🏫</span>
           Tutors
         </Link>
+
+        <Link to="/admin/verifications" className="sidebar-link">
+          <span className="icon">🛡️</span>
+          Verifications
+        </Link>
       </nav>
 
       <button onClick={logout} className="logout-btn">

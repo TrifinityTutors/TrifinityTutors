@@ -12,12 +12,12 @@ const auth = require("../middleware/auth");
 // Create student request
 router.post("/student", async (req, res) => {
   try {
-    const { name, class: studentClass, subject, locality } = req.body
+    const { name, class: studentClass, subject, locality, board, phoneNumber, exactAddress } = req.body
     
     // Validate required fields
-    if (!name || !studentClass || !subject || !locality) {
+    if (!name || !studentClass || !subject || !locality || !board || !phoneNumber || !exactAddress) {
       return res.status(400).json({ 
-        error: "All fields (name, class, subject, locality) are required" 
+        error: "All fields are required (name, class, subject, locality, board, phoneNumber, exactAddress)" 
       })
     }
     
@@ -25,7 +25,10 @@ router.post("/student", async (req, res) => {
       name: name.trim(),
       class: studentClass.trim(),
       subject: subject.trim(),
-      locality: locality.trim()
+      locality: locality.trim(),
+      board: board.trim(),
+      phoneNumber: phoneNumber.trim(),
+      exactAddress: exactAddress.trim()
     })
     
     await data.save()

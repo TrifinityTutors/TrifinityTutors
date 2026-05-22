@@ -1,13 +1,18 @@
 import { useState } from "react"
+import { useNavigate } from "react-router-dom"
 import "./StudentRegister.css"
 
 function StudentRegister() {
+  const navigate = useNavigate()
 
   const [form, setForm] = useState({
     name: "",
     class: "",
     subject: "",
-    locality: ""
+    locality: "",
+    board: "",
+    phoneNumber: "",
+    exactAddress: ""
   })
 
   const [isLoading, setIsLoading] = useState(false)
@@ -20,7 +25,7 @@ function StudentRegister() {
     e.preventDefault()
     
     // Validate all fields
-    if (!form.name.trim() || !form.class.trim() || !form.subject.trim() || !form.locality.trim()) {
+    if (!form.name.trim() || !form.class.trim() || !form.subject.trim() || !form.locality.trim() || !form.board || !form.phoneNumber.trim() || !form.exactAddress.trim()) {
       alert("❌ Please fill all fields")
       return
     }
@@ -50,8 +55,14 @@ function StudentRegister() {
         name: "",
         class: "",
         subject: "",
-        locality: ""
+        locality: "",
+        board: "",
+        phoneNumber: "",
+        exactAddress: ""
       })
+
+      // Redirect to home page
+      navigate("/")
     } catch (error) {
       console.error("Submit error:", error)
       alert("❌ Error submitting form: " + error.message)
@@ -114,6 +125,49 @@ function StudentRegister() {
               value={form.locality}
               placeholder="Enter your location or area"
               onChange={handleChange}
+              required
+            />
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="board">Board</label>
+            <select
+              id="board"
+              name="board"
+              value={form.board}
+              onChange={handleChange}
+              required
+            >
+              <option value="">Select your board</option>
+              <option value="CBSE">CBSE</option>
+              <option value="ICSE">ICSE</option>
+              <option value="State Board">State Board</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="phoneNumber">Phone Number</label>
+            <input
+              id="phoneNumber"
+              name="phoneNumber"
+              type="tel"
+              value={form.phoneNumber}
+              placeholder="Enter your phone number"
+              onChange={handleChange}
+              required
+            />
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="exactAddress">Exact Address</label>
+            <textarea
+              id="exactAddress"
+              name="exactAddress"
+              value={form.exactAddress}
+              placeholder="Enter your complete address"
+              onChange={handleChange}
+              rows="3"
               required
             />
           </div>

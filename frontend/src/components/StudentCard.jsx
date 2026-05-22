@@ -119,6 +119,11 @@ function StudentCard({ data }) {
           </div>
 
           <div className="info-item">
+            <span className="label">📍 Board:</span>
+            <span className="value">{data.board || "N/A"}</span>
+          </div>
+
+          <div className="info-item">
             <span className="label">📍 Location:</span>
             <span className="value">{data.locality}</span>
           </div>

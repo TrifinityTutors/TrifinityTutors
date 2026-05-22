@@ -50,7 +50,10 @@ export default function Students() {
         name: "New Student",
         class: "9th",
         subject: "Science",
-        phone: "9999999999"
+        locality: "Main Street",
+        board: "CBSE",
+        phoneNumber: "9999999999",
+        exactAddress: "123 Main Street, City"
       })
     });
 
@@ -134,6 +137,7 @@ export default function Students() {
                     <div className="student-meta">
                       <span className="badge">📚 {s.class}</span>
                       <span className="badge">🎓 {s.subject}</span>
+                      <span className="badge">📋 {s.board || "N/A"}</span>
                     </div>
                   </div>
                   <button 
@@ -142,6 +146,13 @@ export default function Students() {
                   >
                     Delete
                   </button>
+                </div>
+
+                {/* ADMIN ONLY: SENSITIVE INFO */}
+                <div className="admin-sensitive-info">
+                  <p><strong>📱 Phone:</strong> {s.phoneNumber || "N/A"}</p>
+                  <p><strong>📍 Exact Address:</strong> {s.exactAddress || "N/A"}</p>
+                  <p><strong>🏘️ Locality:</strong> {s.locality || "N/A"}</p>
                 </div>
 
                 {/* SHOW SELECTED TUTOR */}
