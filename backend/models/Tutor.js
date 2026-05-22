@@ -10,10 +10,32 @@ const tutorSchema = new mongoose.Schema({
   experience: Number,
   phone: String,
 
+  // Profile fields
+  bio: { type: String, default: "" },
+  qualifications: { type: String, default: "" },
+  teachingMethodology: { type: String, default: "" },
+  hourlyRate: { type: Number, default: 0 },
+  
+  // CV and Documents
+  cvFile: { type: String, default: "" }, // File path/URL
+  cvFileName: { type: String, default: "" },
+  cvUploadedAt: Date,
+  
+  // Verification status
   status: {
     type: String,
     default: "pending", // pending | approved | rejected
   },
+  
+  verificationStatus: {
+    type: String,
+    enum: ["unverified", "pending", "verified", "rejected"],
+    default: "unverified"
+  },
+  
+  verifiedAt: Date,
+  verificationNotes: { type: String, default: "" },
+  verifiedBy: { type: String, default: "" }, // Admin ID who verified
 
   // 🔥 ADD THESE (for Google + flow)
   googleId: String,
