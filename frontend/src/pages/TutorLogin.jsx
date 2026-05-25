@@ -104,64 +104,99 @@ function TutorLogin() {
   };
 
   return (
-    <div className="login-container">
-      <div className="login-wrapper">
-        <div className="login-header">
-          <h1>Tutor Login</h1>
-          <p className="subtitle">Welcome back! Sign in to your account</p>
-        </div>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50 flex items-center justify-center p-4">
+      {/* Background Elements */}
+      <div className="absolute top-0 -left-40 w-80 h-80 bg-blue-200 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse"></div>
+      <div className="absolute bottom-0 -right-40 w-80 h-80 bg-blue-300 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse"></div>
 
-        {/* 🔹 Normal Login */}
-        <form onSubmit={handleSubmit} className="login-form">
+      <div className="login-wrapper max-w-md w-full relative">
+        {/* Card */}
+        <div className="bg-white rounded-2xl shadow-2xl p-8 border border-gray-100">
+          <div className="login-header text-center mb-8">
+            <div className="w-16 h-16 bg-gradient-to-br from-blue-600 to-blue-700 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
+              <span className="text-white text-2xl font-bold">T</span>
+            </div>
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">Tutor Login</h1>
+            <p className="subtitle text-gray-600">Welcome back! Sign in to your account</p>
+          </div>
 
-          <div className="form-group">
-            <label htmlFor="email">Email Address</label>
-            <input
-              id="email"
-              name="email"
-              type="email"
-              placeholder="Enter your email"
-              value={form.email}
-              onChange={handleChange}
-              required
+          {/* 🔹 Normal Login */}
+          <form onSubmit={handleSubmit} className="login-form space-y-5 mb-8">
+
+            <div className="form-group">
+              <label htmlFor="email" className="block text-sm font-bold text-gray-900 mb-2">Email Address</label>
+              <input
+                id="email"
+                name="email"
+                type="email"
+                placeholder="Enter your email"
+                value={form.email}
+                onChange={handleChange}
+                required
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all bg-white hover:border-gray-400"
+              />
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="password" className="block text-sm font-bold text-gray-900 mb-2">Password</label>
+              <input
+                id="password"
+                name="password"
+                placeholder="Enter your password"
+                type="password"
+                value={form.password}
+                onChange={handleChange}
+                required
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all bg-white hover:border-gray-400"
+              />
+            </div>
+
+            <a href="#" className="text-blue-600 hover:text-blue-700 font-semibold text-sm inline-block">
+              Forgot password?
+            </a>
+
+            <button 
+              type="submit" 
+              disabled={isLoading}
+              className="w-full px-4 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg font-bold hover:shadow-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed hover:-translate-y-0.5"
+            >
+              {isLoading ? "🔄 Logging in..." : "✅ Login"}
+            </button>
+
+          </form>
+
+          <div className="divider flex items-center gap-4 my-6">
+            <div className="flex-1 h-px bg-gray-300"></div>
+            <span className="text-gray-600 font-medium">OR</span>
+            <div className="flex-1 h-px bg-gray-300"></div>
+          </div>
+
+          {/* 🔥 GOOGLE LOGIN BUTTON */}
+          <div className="google-login-container mb-6">
+            <GoogleLogin
+              onSuccess={handleGoogleSuccess}
+              onError={() => console.log("Google Login Failed")}
             />
           </div>
 
-          <div className="form-group">
-            <label htmlFor="password">Password</label>
-            <input
-              id="password"
-              name="password"
-              placeholder="Enter your password"
-              type="password"
-              value={form.password}
-              onChange={handleChange}
-              required
-            />
+          <div className="footer-link text-center">
+            <p className="text-gray-600">Don't have an account? <a href="/tutor-register" className="text-blue-600 hover:text-blue-700 font-bold">Register here</a></p>
           </div>
-
-          <button type="submit" className="login-btn" disabled={isLoading}>
-            {isLoading ? "Logging in..." : "Login"}
-          </button>
-
-        </form>
-
-        <div className="divider">
-          <span>OR</span>
         </div>
 
-        {/* 🔥 GOOGLE LOGIN BUTTON */}
-        <div className="google-login-container">
-          <GoogleLogin
-            onSuccess={handleGoogleSuccess}
-            onError={() => console.log("Google Login Failed")}
-          />
+        {/* Additional Info */}
+        <div className="mt-8 grid grid-cols-3 gap-4 text-center">
+          {[
+            { icon: "🎯", text: "Easy Signup" },
+            { icon: "💰", text: "Earn Money" },
+            { icon: "⭐", text: "Help Students" }
+          ].map((item, idx) => (
+            <div key={idx} className="bg-white rounded-lg p-4 shadow-sm border border-gray-200 hover:shadow-md transition-all">
+              <div className="text-3xl mb-2">{item.icon}</div>
+              <p className="text-xs font-bold text-gray-900">{item.text}</p>
+            </div>
+          ))}
         </div>
-
-        <div className="footer-link">
-          <p>Don't have an account? <a href="/tutor-register">Register here</a></p>
-        </div>
-
       </div>
     </div>
   );

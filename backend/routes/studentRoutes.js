@@ -6,6 +6,8 @@ const Application = require("../models/Application")
 const Tutor = require("../models/Tutor")
 
 const auth = require("../middleware/auth");
+const { OAuth2Client } = require("google-auth-library");
+const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 // ================= STUDENT =================
 
@@ -47,6 +49,46 @@ router.post("/student", async (req, res) => {
     })
   }
 })
+
+// 🔐 Google Signup Route for Students
+router.post("/google-signup", async (req, res) => {
+  try {
+    const { token } = req.body;
+
+    const ticket = await client.verifyIdToken({
+      idToken: token,
+      audience: process.env.GOOGLE_CLIENT_ID,
+    });
+
+    const payload = ticket.getPayload();
+    const { name, email, picture, sub } = payload;
+    
+    console.log("🔐 Google OAuth - Processing signup for:", email);
+    
+    // Store basic student info for later profile completion
+    const studentData = {
+      name,
+      email,
+      googleId: sub,
+      photo: picture,
+      role: "student"
+    };
+
+    res.json({
+      success: true,
+      user: studentData,
+      message: "Student authenticated with Google"
+    });
+
+  } catch (err) {
+    console.log("❌ Google OAuth Error:", err.message);
+    res.status(401).json({
+      success: false,
+      message: "Google signup failed"
+    });
+  }
+});
+
 router.get("/studentrequests", async (req, res) => {
   try {
     const data = await StudentRequest.find()

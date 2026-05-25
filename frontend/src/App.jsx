@@ -5,13 +5,12 @@ import StudentRegister from "./pages/StudentRegister"
 import TutorRegister from "./pages/TutorRegister"
 import TutorDashboard from "./pages/TutorDashboard"
 import StudentDashboard from "./pages/StudentDashboard"
+import AdminDashboard from "./pages/AdminDashboard"
 import Auth from "./pages/Auth"
+import SignupPage from "./pages/SignupPage"
+import LoginPage from "./pages/LoginPage"
 
 import Login from "./admin/pages/Login";
-import Dashboard from "./admin/pages/Dashboard";
-import Students from "./admin/pages/Students";
-import Tutors from "./admin/pages/Tutors";
-import Verifications from "./admin/pages/Verifications";
 import AdminRoute from "./admin/components/AdminRoute";
 
 import TutorLogin from "./pages/TutorLogin"
@@ -46,6 +45,18 @@ function App() {
           <Auth />
         } />
 
+        <Route path="/auth/login" element={
+          <MainLayout>
+            <LoginPage />
+          </MainLayout>
+        } />
+
+        <Route path="/auth/signup" element={
+          <MainLayout>
+            <SignupPage />
+          </MainLayout>
+        } />
+
         <Route path="/student-register" element={
           <MainLayout>
             <StudentRegister />
@@ -64,20 +75,32 @@ function App() {
         />
 
         <Route path="/dashboard" element={
-          <MainLayout>
+          <ProtectedRoute>
             <TutorDashboard />
-          </MainLayout>
+          </ProtectedRoute>
         } />
 
         <Route path="/tutor-dashboard" element={
-          <MainLayout>
+          <ProtectedRoute>
             <TutorDashboard />
-          </MainLayout>
+          </ProtectedRoute>
         } />
 
         <Route path="/student-dashboard" element={
           <ProtectedRoute>
             <StudentDashboard />
+          </ProtectedRoute>
+        } />
+
+        <Route path="/dashboard/student" element={
+          <ProtectedRoute>
+            <StudentDashboard />
+          </ProtectedRoute>
+        } />
+
+        <Route path="/dashboard/tutor" element={
+          <ProtectedRoute>
+            <TutorDashboard />
           </ProtectedRoute>
         } />
 
@@ -93,27 +116,9 @@ function App() {
         {/* ADMIN (NO USER NAVBAR) */}
         <Route path="/admin-login" element={<Login />} />
 
-        <Route path="/admin/dashboard" element={
+        <Route path="/admin" element={
           <AdminRoute>
-            <Dashboard />
-          </AdminRoute>
-        } />
-
-        <Route path="/admin/students" element={
-          <AdminRoute>
-            <Students />
-          </AdminRoute>
-        } />
-
-        <Route path="/admin/tutors" element={
-          <AdminRoute>
-            <Tutors />
-          </AdminRoute>
-        } />
-
-        <Route path="/admin/verifications" element={
-          <AdminRoute>
-            <Verifications />
+            <AdminDashboard />
           </AdminRoute>
         } />
 

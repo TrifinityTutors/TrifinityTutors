@@ -1,295 +1,128 @@
-import { useEffect, useState } from "react"
-import { useNavigate } from "react-router-dom"
-import "./StudentDashboard.css"
+import { Link, useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { LayoutDashboard, Search, Heart, Calendar, Bell, MessageCircle, Settings, BookOpen, Star, Clock } from "lucide-react";
+import { DashboardShell, StatCard } from "@/components/DashboardShell";
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+
+const nav = [
+  { to: "/dashboard/student", label: "Overview", icon: LayoutDashboard },
+  { to: "/tutors", label: "Find Tutors", icon: Search },
+  { to: "/dashboard/student", label: "Saved Tutors", icon: Heart },
+  { to: "/dashboard/student", label: "Bookings", icon: Calendar },
+  { to: "/dashboard/student", label: "Messages", icon: MessageCircle },
+  { to: "/dashboard/student", label: "Notifications", icon: Bell },
+  { to: "/dashboard/student", label: "Settings", icon: Settings },
+];
 
 function StudentDashboard() {
-  const navigate = useNavigate()
-  const [user, setUser] = useState(null)
-  const [stats, setStats] = useState({
-    activeSessions: 0,
-    savedTutors: 0,
-    hoursLearned: 0,
-    averageRating: 4.9
-  })
-  const [bookings, setBookings] = useState([])
-  const [savedTutors, setSavedTutors] = useState([])
-  const [notifications, setNotifications] = useState([])
-  const [sidebarOpen, setSidebarOpen] = useState(false)
+  const navigate = useNavigate();
+  const [user, setUser] = useState(null);
 
   useEffect(() => {
-    const token = localStorage.getItem("token")
-    if (!token) {
-      navigate("/auth")
-      return
+    const token = localStorage.getItem("token");
+    const studentData = localStorage.getItem("student");
+
+    if (!token && !studentData) {
+      navigate("/auth/login");
+      return;
     }
 
-    // Load user data from localStorage
-    const userData = localStorage.getItem("user")
-    if (userData) {
-      setUser(JSON.parse(userData))
+    if (studentData) {
+      setUser(JSON.parse(studentData));
     }
+  }, [navigate]);
 
-    // Load mock data
-    setSavedTutors([
-      { id: 1, name: "Mei Lin", subject: "Chemistry", rating: 4.92, avatar: "🟣" },
-      { id: 2, name: "Kabir Singh", subject: "SAT Prep", rating: 4.88, avatar: "🔵" },
-      { id: 3, name: "Amelia Brown", subject: "Biology", rating: 4.85, avatar: "🔴" }
-    ])
-
-    setBookings([
-      { 
-        id: 1, 
-        name: "Ananya Rao", 
-        subject: "Calculus II", 
-        date: "Today", 
-        time: "4:00 PM", 
-        status: "Upcoming",
-        avatar: "🔵"
-      },
-      { 
-        id: 2, 
-        name: "Rahul Verma", 
-        subject: "Mechanics", 
-        date: "Tomorrow", 
-        time: "6:00 PM", 
-        status: "Confirmed",
-        avatar: "🟢"
-      },
-      { 
-        id: 3, 
-        name: "Sara Iqbal", 
-        subject: "Essay Writing", 
-        date: "Fri", 
-        time: "11:00 AM", 
-        status: "Pending",
-        avatar: "🔴"
-      },
-      { 
-        id: 4, 
-        name: "Daniel Cohen", 
-        subject: "Python Basics", 
-        date: "Last week", 
-        time: "", 
-        status: "Completed",
-        avatar: "🟠"
-      }
-    ])
-
-    setNotifications([
-      {
-        id: 1,
-        message: "Ananya confirmed your booking for Calculus II",
-        timestamp: "10 min ago"
-      },
-      {
-        id: 2,
-        message: "New message from Rahul Verma",
-        timestamp: "1 hour ago"
-      }
-    ])
-  }, [navigate])
-
-  const handleLogout = () => {
-    localStorage.removeItem("token")
-    localStorage.removeItem("user")
-    navigate("/")
-  }
+  const userName = user?.name || "Student";
 
   return (
-    <div className="student-dashboard">
-      {/* Sidebar */}
-      <aside className={`sidebar ${sidebarOpen ? "open" : ""}`}>
-        <div className="sidebar-header">
-          <div className="logo">
-            <span className="logo-icon">T</span>
-          </div>
-          <span className="logo-text">Trifinity</span>
-        </div>
+    <DashboardShell navItems={nav} title={`Welcome back, ${userName} 👋`} role="Student">
+      <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+        <StatCard label="Active sessions" value="3" delta="+1 this week" icon={BookOpen} />
+        <StatCard label="Saved tutors" value="12" icon={Heart} accent="success" />
+        <StatCard label="Hours learned" value="48" delta="+6 this month" icon={Clock} accent="warning" />
+        <StatCard label="Average rating" value="4.9" icon={Star} />
+      </div>
 
-        <nav className="sidebar-nav">
-          <div className="nav-section">
-            <span className="nav-label">STUDENT</span>
-            <a href="#overview" className="nav-item active">
-              <span className="nav-icon">📊</span>
-              <span className="nav-text">Overview</span>
-            </a>
-            <a href="#find-tutors" className="nav-item">
-              <span className="nav-icon">🔍</span>
-              <span className="nav-text">Find Tutors</span>
-            </a>
-            <a href="#saved-tutors" className="nav-item">
-              <span className="nav-icon">❤️</span>
-              <span className="nav-text">Saved Tutors</span>
-            </a>
-            <a href="#bookings" className="nav-item">
-              <span className="nav-icon">📅</span>
-              <span className="nav-text">Bookings</span>
-            </a>
-            <a href="#messages" className="nav-item">
-              <span className="nav-icon">💬</span>
-              <span className="nav-text">Messages</span>
-            </a>
-            <a href="#notifications" className="nav-item">
-              <span className="nav-icon">🔔</span>
-              <span className="nav-text">Notifications</span>
-            </a>
-            <a href="#settings" className="nav-item">
-              <span className="nav-icon">⚙️</span>
-              <span className="nav-text">Settings</span>
-            </a>
+      <div className="mt-8 grid gap-6 lg:grid-cols-3">
+        <Card className="lg:col-span-2 p-6 border-border/60">
+          <div className="flex items-center justify-between mb-5">
+            <h2 className="font-display font-semibold">Recent bookings</h2>
+            <Button variant="ghost" size="sm">View all</Button>
           </div>
-        </nav>
-
-        <div className="sidebar-footer">
-          <div className="user-info">
-            <div className="user-avatar">A</div>
-            <div className="user-details">
-              <p className="user-name">{user?.name || "Ananya R."}</p>
-              <p className="user-role">Student</p>
-            </div>
-          </div>
-          <button onClick={handleLogout} className="logout-btn">
-            <span>→</span>
-          </button>
-        </div>
-      </aside>
-
-      {/* Mobile Hamburger */}
-      <button className="hamburger" onClick={() => setSidebarOpen(!sidebarOpen)}>
-        <span></span>
-        <span></span>
-        <span></span>
-      </button>
-
-      {/* Main Content */}
-      <main className="dashboard-main">
-        {/* Header */}
-        <div className="dashboard-header">
-          <div className="header-left">
-            <h1>Welcome back, {user?.name?.split(" ")[0] || "Ananya"} 👋</h1>
-          </div>
-          <div className="header-right">
-            <input type="text" placeholder="Search..." className="search-box" />
-            <button className="notification-bell">
-              🔔
-              <span className="notification-badge">1</span>
-            </button>
-            <div className="user-avatar-header">A</div>
-          </div>
-        </div>
-
-        {/* Stats Cards */}
-        <div className="stats-grid">
-          <div className="stat-card">
-            <div className="stat-icon">📚</div>
-            <div className="stat-content">
-              <p className="stat-label">Active sessions</p>
-              <h3 className="stat-value">3</h3>
-              <span className="stat-change">+1 this week</span>
-            </div>
-          </div>
-
-          <div className="stat-card">
-            <div className="stat-icon">❤️</div>
-            <div className="stat-content">
-              <p className="stat-label">Saved tutors</p>
-              <h3 className="stat-value">12</h3>
-              <span className="stat-change">+2 this month</span>
-            </div>
-          </div>
-
-          <div className="stat-card">
-            <div className="stat-icon">⏱️</div>
-            <div className="stat-content">
-              <p className="stat-label">Hours learned</p>
-              <h3 className="stat-value">48</h3>
-              <span className="stat-change">+8 this month</span>
-            </div>
-          </div>
-
-          <div className="stat-card">
-            <div className="stat-icon">⭐</div>
-            <div className="stat-content">
-              <p className="stat-label">Average rating</p>
-              <h3 className="stat-value">4.9</h3>
-              <span className="stat-change">Based on 24 reviews</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Recent Bookings & Saved Tutors */}
-        <div className="dashboard-grid">
-          {/* Recent Bookings */}
-          <section className="dashboard-section">
-            <div className="section-header">
-              <h2>Recent bookings</h2>
-              <a href="#" className="view-all-link">View all</a>
-            </div>
-            <div className="bookings-list">
-              {bookings.map((booking) => (
-                <div key={booking.id} className="booking-item">
-                  <div className="booking-avatar">{booking.avatar}</div>
-                  <div className="booking-info">
-                    <h4 className="booking-name">{booking.name}</h4>
-                    <p className="booking-subject">{booking.subject} · {booking.date} · {booking.time}</p>
-                  </div>
-                  <span className={`booking-status status-${booking.status.toLowerCase()}`}>
-                    {booking.status}
-                  </span>
+          <div className="space-y-3">
+            {[
+              { name: "Ananya Rao", subject: "Calculus II", time: "Today · 4:00 PM", status: "Upcoming", color: "from-blue-400 to-indigo-500" },
+              { name: "Rahul Verma", subject: "Mechanics", time: "Tomorrow · 6:00 PM", status: "Confirmed", color: "from-emerald-400 to-teal-500" },
+              { name: "Sara Iqbal", subject: "Essay Writing", time: "Fri · 11:00 AM", status: "Pending", color: "from-rose-400 to-pink-500" },
+              { name: "Daniel Cohen", subject: "Python Basics", time: "Last week", status: "Completed", color: "from-amber-400 to-orange-500" },
+            ].map((b,i)=>(
+              <div key={i} className="flex items-center gap-4 rounded-xl border border-border p-4 hover:bg-accent/40 transition">
+                <div className={`h-11 w-11 shrink-0 rounded-xl bg-gradient-to-br ${b.color}`} />
+                <div className="flex-1 min-w-0">
+                  <div className="font-semibold truncate">{b.name}</div>
+                  <div className="text-sm text-muted-foreground truncate">{b.subject} · {b.time}</div>
                 </div>
-              ))}
-            </div>
-          </section>
-
-          {/* Saved Tutors */}
-          <section className="dashboard-section saved-tutors-section">
-            <div className="section-header">
-              <h2>Saved tutors</h2>
-              <a href="#" className="view-all-link">View all</a>
-            </div>
-            <div className="tutors-list">
-              {savedTutors.map((tutor) => (
-                <div key={tutor.id} className="tutor-card">
-                  <div className="tutor-avatar">{tutor.avatar}</div>
-                  <h4 className="tutor-name">{tutor.name}</h4>
-                  <p className="tutor-subject">{tutor.subject}</p>
-                  <div className="tutor-rating">
-                    <span className="star">⭐</span>
-                    <span className="rating-value">{tutor.rating}</span>
-                  </div>
-                </div>
-              ))}
-              <button className="discover-btn">Discover more</button>
-            </div>
-          </section>
-        </div>
-
-        {/* Notifications */}
-        <section className="dashboard-section notifications-section">
-          <div className="section-header">
-            <h2>🔔 Notifications</h2>
-          </div>
-          <div className="notifications-list">
-            {notifications.map((notif) => (
-              <div key={notif.id} className="notification-item">
-                <span className="notification-dot"></span>
-                <p className="notification-message">{notif.message}</p>
-                <span className="notification-time">{notif.timestamp}</span>
+                <Badge variant={b.status === "Completed" ? "secondary" : "default"} className={
+                  b.status === "Upcoming" ? "bg-gradient-primary border-0" :
+                  b.status === "Pending" ? "bg-warning/20 text-warning-foreground border-0" : ""
+                }>{b.status}</Badge>
               </div>
             ))}
           </div>
-        </section>
-      </main>
+        </Card>
 
-      {/* Mobile Overlay */}
-      {sidebarOpen && (
-        <div 
-          className="sidebar-overlay" 
-          onClick={() => setSidebarOpen(false)}
-        ></div>
-      )}
-    </div>
-  )
+        <Card className="p-6 border-border/60">
+          <div className="flex items-center justify-between mb-5">
+            <h2 className="font-display font-semibold">Saved tutors</h2>
+            <Button variant="ghost" size="sm">View all</Button>
+          </div>
+          <div className="space-y-4">
+            {[
+              { name: "Mei Lin", subject: "Chemistry", rating: 4.92, color: "from-violet-400 to-purple-500" },
+              { name: "Kabir Singh", subject: "SAT Prep", rating: 4.88, color: "from-cyan-400 to-blue-500" },
+              { name: "Amelia Brown", subject: "Biology", rating: 4.85, color: "from-rose-400 to-pink-500" },
+            ].map((t,i)=>(
+              <div key={i} className="flex items-center gap-3">
+                <div className={`h-10 w-10 rounded-full bg-gradient-to-br ${t.color}`} />
+                <div className="flex-1 min-w-0">
+                  <div className="font-medium text-sm truncate">{t.name}</div>
+                  <div className="text-xs text-muted-foreground truncate">{t.subject}</div>
+                </div>
+                <div className="flex items-center gap-1 text-xs">
+                  <Star className="h-3.5 w-3.5 fill-warning text-warning" />
+                  <span className="font-semibold">{t.rating}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+          <Button asChild className="mt-5 w-full bg-gradient-primary shadow-glow">
+            <Link to="/tutors">Discover more</Link>
+          </Button>
+        </Card>
+      </div>
+
+      <Card className="mt-6 p-6 border-border/60">
+        <div className="flex items-center justify-between mb-5">
+          <h2 className="font-display font-semibold flex items-center gap-2"><Bell className="h-4 w-4 text-primary" /> Notifications</h2>
+        </div>
+        <div className="space-y-2">
+          {[
+            { text: "Ananya confirmed your booking for Calculus II", time: "10 min ago", new: true },
+            { text: "New message from Rahul Verma", time: "1 hour ago", new: true },
+            { text: "Your session with Daniel was rated 5 stars", time: "Yesterday", new: false },
+          ].map((n,i)=>(
+            <div key={i} className={`flex items-center gap-3 rounded-xl p-3 ${n.new ? "bg-primary/5" : ""}`}>
+              <div className={`h-2 w-2 rounded-full ${n.new ? "bg-primary" : "bg-muted"}`} />
+              <div className="flex-1 text-sm">{n.text}</div>
+              <div className="text-xs text-muted-foreground">{n.time}</div>
+            </div>
+          ))}
+        </div>
+      </Card>
+    </DashboardShell>
+  );
 }
 
-export default StudentDashboard
+export default StudentDashboard;

@@ -1,149 +1,104 @@
-import { Link, useNavigate } from "react-router-dom"
-import { useState, useEffect } from "react"
+import { Link, useLocation } from "react-router-dom";
+import { GraduationCap, Menu, X } from "lucide-react";
+import { useState } from "react";
 
-function Navbar() {
-  const token = localStorage.getItem("token")
-  const navigate = useNavigate()
-  const [isMenuOpen, setIsMenuOpen] = useState(false)
-  const [isScrolled, setIsScrolled] = useState(false)
+const links = [
+  { to: "/tutors", label: "Find Tutors" },
+  { to: "/register-tutor", label: "Become a Tutor" },
+  { to: "/dashboard/student", label: "Student" },
+  { to: "/dashboard/tutor", label: "Tutor" },
+  { to: "/admin-login", label: "Admin" },
+];
 
-  useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 20)
-    }
-    window.addEventListener("scroll", handleScroll)
-    return () => window.removeEventListener("scroll", handleScroll)
-  }, [])
-
-  useEffect(() => {
-    const handleResize = () => {
-      if (window.innerWidth >= 768) {
-        setIsMenuOpen(false)
-      }
-    }
-    window.addEventListener("resize", handleResize)
-    return () => window.removeEventListener("resize", handleResize)
-  }, [])
-
-  const handleLogout = () => {
-    localStorage.removeItem("token")
-    localStorage.removeItem("tutor")
-    setIsMenuOpen(false)
-    navigate("/")
-  }
-
-  const handleLinkClick = () => {
-    setIsMenuOpen(false)
-  }
+export function Navbar() {
+  const [open, setOpen] = useState(false);
+  const location = useLocation();
+  const path = location.pathname;
 
   return (
-    <nav className={`fixed w-full z-50 transition-all duration-300 ${isScrolled ? "bg-white/95 backdrop-blur-md shadow-lg" : "bg-white"}`}>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-20">
-          {/* Logo */}
-          <Link to="/" className="flex items-center gap-3 group" onClick={handleLinkClick}>
-            <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center shadow-lg">
-              <span className="text-white text-lg font-bold">T</span>
+    <header className="sticky top-0 z-50 w-full">
+      <div className="bg-white border-b border-gray-200">
+        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
+          <Link to="/" className="flex items-center gap-2 group">
+            <div className="grid h-9 w-9 place-items-center rounded-xl bg-blue-600 text-white shadow-md transition-transform group-hover:scale-105">
+              <GraduationCap className="h-5 w-5" />
             </div>
-            <div className="flex flex-col leading-tight">
-              <span className="font-bold text-gray-900">Trifinity</span>
-              <span className="text-xs text-blue-600 font-semibold">Tutors</span>
-            </div>
+            <span className="font-bold text-lg tracking-tight text-gray-900">
+              Trifinity<span className="text-blue-600"> Tutors</span>
+            </span>
           </Link>
 
-          {/* Desktop Menu */}
-          <div className="hidden lg:flex items-center gap-8">
-            <Link to="/student-register" className="text-gray-700 hover:text-blue-600 transition-colors font-medium text-sm">
-              Find Tutors
+          <nav className="hidden items-center gap-1 md:flex">
+            {links.map((l) => (
+              <Link
+                key={l.to}
+                to={l.to}
+                className={`rounded-lg px-3 py-2 text-sm font-medium transition-colors hover:bg-gray-100 ${
+                  path === l.to ? "text-gray-900 bg-gray-50" : "text-gray-600"
+                }`}
+              >
+                {l.label}
+              </Link>
+            ))}
+          </nav>
+
+          <div className="hidden items-center gap-2 md:flex">
+            <Link
+              to="/auth/login"
+              className="px-3 py-2 text-sm font-medium text-gray-700 hover:text-blue-600 transition-colors"
+            >
+              Log in
             </Link>
-            <Link to="/tutor-login" className="text-gray-700 hover:text-blue-600 transition-colors font-medium text-sm">
-              Become a Tutor
-            </Link>
-            <Link to="/student-register" className="text-gray-700 hover:text-blue-600 transition-colors font-medium text-sm">
-              Student
-            </Link>
-            <Link to="/tutor-login" className="text-gray-700 hover:text-blue-600 transition-colors font-medium text-sm">
-              Tutor
-            </Link>
-            <Link to="/admin-login" className="text-gray-700 hover:text-blue-600 transition-colors font-medium text-sm">
-              Admin
+            <Link
+              to="/auth/signup"
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
+            >
+              Get Started
             </Link>
           </div>
 
-          {/* CTA & Mobile Menu Button */}
-          <div className="flex items-center gap-4">
-            {!token && (
-              <>
-                <button className="hidden sm:inline-block px-6 py-2 text-gray-700 hover:text-blue-600 transition-colors font-medium">
-                  Log in
-                </button>
-                <Link to="/auth" className="hidden sm:inline-block px-6 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-bold text-sm shadow-md hover:shadow-lg">
-                  Get Started
-                </Link>
-              </>
-            )}
-            {token && (
-              <>
-                <Link to="/dashboard" className="hidden sm:inline-block text-gray-700 hover:text-blue-600 transition-colors font-medium text-sm">
-                  Dashboard
-                </Link>
-                <button onClick={handleLogout} className="hidden sm:inline-block px-6 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors font-medium text-sm">
-                  Logout
-                </button>
-              </>
-            )}
-
-            {/* Mobile Menu Button */}
-            <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="lg:hidden p-2 hover:bg-gray-100 rounded-lg transition-colors">
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-              </svg>
-            </button>
-          </div>
+          <button
+            onClick={() => setOpen(!open)}
+            className="md:hidden rounded-lg p-2 hover:bg-gray-100"
+            aria-label="Menu"
+          >
+            {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+          </button>
         </div>
 
-        {/* Mobile Menu */}
-        {isMenuOpen && (
-          <div className="lg:hidden pb-4 border-t border-gray-100">
-            <Link to="/student-register" className="block py-3 text-gray-700 hover:text-blue-600 font-medium" onClick={handleLinkClick}>
-              Find Tutors
-            </Link>
-            <Link to="/tutor-login" className="block py-3 text-gray-700 hover:text-blue-600 font-medium" onClick={handleLinkClick}>
-              Become a Tutor
-            </Link>
-            <Link to="/student-register" className="block py-3 text-gray-700 hover:text-blue-600 font-medium" onClick={handleLinkClick}>
-              Student
-            </Link>
-            <Link to="/tutor-login" className="block py-3 text-gray-700 hover:text-blue-600 font-medium" onClick={handleLinkClick}>
-              Tutor
-            </Link>
-            <Link to="/admin-login" className="block py-3 text-gray-700 hover:text-blue-600 font-medium" onClick={handleLinkClick}>
-              Admin
-            </Link>
-            {!token ? (
-              <>
-                <button className="block w-full text-left py-3 text-gray-700 hover:text-blue-600 font-medium">
-                  Log in
-                </button>
-                <Link to="/student-register" className="block w-full mt-3 px-6 py-2 bg-blue-600 text-white rounded-lg transition-colors font-bold text-center">
-                  Get Started
-                </Link>
-              </>
-            ) : (
-              <>
-                <Link to="/dashboard" className="block py-3 text-gray-700 hover:text-blue-600 font-medium" onClick={handleLinkClick}>
-                  Dashboard
-                </Link>
-                <button onClick={handleLogout} className="w-full mt-3 px-6 py-2 bg-gray-100 text-gray-700 rounded-lg transition-colors font-medium text-left">
-                  Logout
-                </button>
-              </>
-            )}
+        {open && (
+          <div className="md:hidden border-t border-gray-200 px-4 py-3 space-y-1">
+            {links.map((l) => (
+              <Link
+                key={l.to}
+                to={l.to}
+                onClick={() => setOpen(false)}
+                className="block rounded-lg px-3 py-2 text-sm font-medium hover:bg-gray-100 text-gray-700"
+              >
+                {l.label}
+              </Link>
+            ))}
+            <div className="flex gap-2 pt-2">
+              <Link
+                to="/auth/login"
+                onClick={() => setOpen(false)}
+                className="flex-1 text-center rounded-lg px-3 py-2 text-sm font-medium border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors"
+              >
+                Log in
+              </Link>
+              <Link
+                to="/auth/signup"
+                onClick={() => setOpen(false)}
+                className="flex-1 text-center rounded-lg px-3 py-2 bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 transition-colors"
+              >
+                Get Started
+              </Link>
+            </div>
           </div>
         )}
       </div>
-    </nav>
-  )
+    </header>
+  );
 }
 
-export default Navbar
+export default Navbar;
