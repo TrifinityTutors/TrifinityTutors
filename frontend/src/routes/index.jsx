@@ -1,4 +1,5 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
+import { Link } from "react-router-dom";
 import { useState } from "react";
 import {
   Search, MapPin, ArrowRight, Sparkles, Shield, Clock, Award,
@@ -68,6 +69,8 @@ function LandingPage() {
     </SiteLayout>
   );
 }
+
+export default LandingPage;
 
 function Hero() {
   return (

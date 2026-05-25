@@ -1,8 +1,8 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom"
 
-import Home from "./pages/Home"
+import LandingPage from "./routes/index"
 import StudentRegister from "./pages/StudentRegister"
-import TutorRegister from "./pages/TutorRegister"
+import RegisterTutor from "./routes/register-tutor"
 import TutorDashboard from "./pages/TutorDashboard"
 import StudentDashboard from "./pages/StudentDashboard"
 import AdminDashboard from "./pages/AdminDashboard"
@@ -36,9 +36,7 @@ function App() {
 
         <Route path="/" element={
           <PublicRoute>
-            <MainLayout>
-              <Home />
-            </MainLayout>
+            <LandingPage />
           </PublicRoute>
         } />
 
@@ -64,16 +62,13 @@ function App() {
           </MainLayout>
         } />
 
-        <Route
-          path="/tutor-register"
-          element={
-            <MainLayout>
-              <ProtectedRoute>
-                <TutorRegister />
-              </ProtectedRoute>
-            </MainLayout>
-          }
-        />
+        <Route path="/register-tutor" element={
+          <RegisterTutor />
+        } />
+
+        <Route path="/tutor-register" element={
+          <RegisterTutor />
+        } />
 
         <Route path="/dashboard" element={
           <ProtectedRoute>

@@ -1,6 +1,7 @@
 import { Link, useLocation } from "react-router-dom";
 import { GraduationCap, Menu, X } from "lucide-react";
 import { useState } from "react";
+import { Button } from "@/components/ui/button";
 
 const links = [
   { to: "/tutors", label: "Find Tutors" },
@@ -43,18 +44,12 @@ export function Navbar() {
           </nav>
 
           <div className="hidden items-center gap-2 md:flex">
-            <Link
-              to="/auth/login"
-              className="px-3 py-2 text-sm font-medium text-gray-700 hover:text-blue-600 transition-colors"
-            >
-              Log in
-            </Link>
-            <Link
-              to="/auth/signup"
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
-            >
-              Get Started
-            </Link>
+            <Button variant="ghost" size="default" asChild>
+              <Link to="/auth/login">Log in</Link>
+            </Button>
+            <Button size="default" asChild>
+              <Link to="/auth/signup">Get Started</Link>
+            </Button>
           </div>
 
           <button
@@ -79,20 +74,16 @@ export function Navbar() {
               </Link>
             ))}
             <div className="flex gap-2 pt-2">
-              <Link
-                to="/auth/login"
-                onClick={() => setOpen(false)}
-                className="flex-1 text-center rounded-lg px-3 py-2 text-sm font-medium border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors"
-              >
-                Log in
-              </Link>
-              <Link
-                to="/auth/signup"
-                onClick={() => setOpen(false)}
-                className="flex-1 text-center rounded-lg px-3 py-2 bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 transition-colors"
-              >
-                Get Started
-              </Link>
+              <Button variant="outline" size="default" asChild>
+                <Link to="/auth/login" onClick={() => setOpen(false)}>
+                  Log in
+                </Link>
+              </Button>
+              <Button size="default" asChild>
+                <Link to="/auth/signup" onClick={() => setOpen(false)}>
+                  Get Started
+                </Link>
+              </Button>
             </div>
           </div>
         )}

@@ -176,3 +176,5 @@ function Field({ label, placeholder, className }) {
     </div>
   );
 }
+
+export default RegisterTutorPage;

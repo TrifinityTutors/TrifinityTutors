@@ -1,11 +1,13 @@
 import { Link } from "react-router-dom";
-import { GraduationCap, Twitter, Linkedin, Instagram, Github } from "lucide-react";
+import { GraduationCap } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 export function Footer() {
   return (
-    <footer className="mt-24 border-t border-gray-200 bg-gradient-to-b from-gray-50 to-white">
+    <footer className="mt-24 border-t border-gray-200 bg-gradient-soft text-slate-900">
       <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
-        <div className="grid gap-10 md:grid-cols-2 lg:grid-cols-5">
+        <div className="rounded-[2rem] bg-white/80 p-8 shadow-soft ring-1 ring-slate-200/80 backdrop-blur-xl">
+          <div className="grid gap-10 md:grid-cols-2 lg:grid-cols-5">
           <div className="lg:col-span-2">
             <Link to="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
               <div className="grid h-9 w-9 place-items-center rounded-xl bg-gradient-to-r from-blue-600 to-blue-500 text-white">
@@ -17,16 +19,13 @@ export function Footer() {
               Connecting passionate college tutors with students who want to learn.
               Trusted, verified, and tailored to your goals.
             </p>
-            <div className="mt-6 flex gap-3">
-              {[Twitter, Linkedin, Instagram, Github].map((Icon, i) => (
-                <a
-                  key={i}
-                  href="#"
-                  className="grid h-9 w-9 place-items-center rounded-lg border border-gray-200 bg-white text-gray-600 transition-colors hover:bg-blue-600 hover:text-white hover:border-blue-600"
-                >
-                  <Icon className="h-4 w-4" />
-                </a>
-              ))}
+            <div className="mt-6 flex flex-wrap items-center gap-3">
+              <Button size="sm" asChild>
+                <Link to="/tutors">Browse Tutors</Link>
+              </Button>
+              <Button variant="outline" size="sm" asChild>
+                <Link to="/auth/signup">Become a Tutor</Link>
+              </Button>
             </div>
           </div>
           {[
@@ -53,6 +52,7 @@ export function Footer() {
           <p>Crafted with care for learners and educators worldwide.</p>
         </div>
       </div>
+    </div>
     </footer>
   );
 }
