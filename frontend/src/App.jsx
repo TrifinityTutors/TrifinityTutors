@@ -1,15 +1,17 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom"
 
-import Home from "./pages/Home"
+import LandingPage from "./routes/index"
 import StudentRegister from "./pages/StudentRegister"
-import TutorRegister from "./pages/TutorRegister"
+import RegisterTutor from "./routes/register-tutor"
 import TutorDashboard from "./pages/TutorDashboard"
+import StudentDashboard from "./pages/StudentDashboard"
+import AdminDashboard from "./pages/AdminDashboard"
+import Tutors from "./pages/Tutors"
+import Auth from "./pages/Auth"
+import SignupPage from "./pages/SignupPage"
+import LoginPage from "./pages/LoginPage"
 
 import Login from "./admin/pages/Login";
-import Dashboard from "./admin/pages/Dashboard";
-import Students from "./admin/pages/Students";
-import Tutors from "./admin/pages/Tutors";
-import Verifications from "./admin/pages/Verifications";
 import AdminRoute from "./admin/components/AdminRoute";
 
 import TutorLogin from "./pages/TutorLogin"
@@ -34,10 +36,24 @@ function App() {
 
         <Route path="/" element={
           <PublicRoute>
-            <MainLayout>
-              <Home />
-            </MainLayout>
+            <LandingPage />
           </PublicRoute>
+        } />
+
+        <Route path="/auth" element={
+          <Auth />
+        } />
+
+        <Route path="/auth/login" element={
+          <MainLayout>
+            <LoginPage />
+          </MainLayout>
+        } />
+
+        <Route path="/auth/signup" element={
+          <MainLayout>
+            <SignupPage />
+          </MainLayout>
         } />
 
         <Route path="/student-register" element={
@@ -46,27 +62,42 @@ function App() {
           </MainLayout>
         } />
 
-        <Route
-          path="/tutor-register"
-          element={
-            <MainLayout>
-              <ProtectedRoute>
-                <TutorRegister />
-              </ProtectedRoute>
-            </MainLayout>
-          }
-        />
+        <Route path="/register-tutor" element={
+          <RegisterTutor />
+        } />
+
+        <Route path="/tutor-register" element={
+          <RegisterTutor />
+        } />
 
         <Route path="/dashboard" element={
-          <MainLayout>
+          <ProtectedRoute>
             <TutorDashboard />
-          </MainLayout>
+          </ProtectedRoute>
         } />
 
         <Route path="/tutor-dashboard" element={
-          <MainLayout>
+          <ProtectedRoute>
             <TutorDashboard />
-          </MainLayout>
+          </ProtectedRoute>
+        } />
+
+        <Route path="/student-dashboard" element={
+          <ProtectedRoute>
+            <StudentDashboard />
+          </ProtectedRoute>
+        } />
+
+        <Route path="/dashboard/student" element={
+          <ProtectedRoute>
+            <StudentDashboard />
+          </ProtectedRoute>
+        } />
+
+        <Route path="/dashboard/tutor" element={
+          <ProtectedRoute>
+            <TutorDashboard />
+          </ProtectedRoute>
         } />
 
         <Route path="/my-applications" element={
@@ -75,33 +106,19 @@ function App() {
           </MainLayout>
         } />
 
+        <Route path="/tutors" element={
+          <Tutors />
+        } />
+
         {/* LOGIN (NO NAVBAR) */}
         <Route path="/tutor-login" element={<TutorLogin />} />
 
         {/* ADMIN (NO USER NAVBAR) */}
         <Route path="/admin-login" element={<Login />} />
 
-        <Route path="/admin/dashboard" element={
+        <Route path="/admin" element={
           <AdminRoute>
-            <Dashboard />
-          </AdminRoute>
-        } />
-
-        <Route path="/admin/students" element={
-          <AdminRoute>
-            <Students />
-          </AdminRoute>
-        } />
-
-        <Route path="/admin/tutors" element={
-          <AdminRoute>
-            <Tutors />
-          </AdminRoute>
-        } />
-
-        <Route path="/admin/verifications" element={
-          <AdminRoute>
-            <Verifications />
+            <AdminDashboard />
           </AdminRoute>
         } />
 
