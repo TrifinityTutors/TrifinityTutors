@@ -283,7 +283,7 @@ function RegisterTutorPage() {
                       <Field label="Last name" name="lastName" value={form.lastName} onChange={handleInputChange} />
                     </div>
                     <div className="grid gap-4 sm:grid-cols-2">
-                      <Field label="Email address" name="email" value={form.email} onChange={handleInputChange} readOnly />
+                      <Field label="Email address" name="email" type="email" value={form.email} onChange={handleInputChange} />
                       <Field label="Phone number" name="phone" value={form.phone} onChange={handleInputChange} />
                     </div>
                     <div className="grid gap-4 sm:grid-cols-2">

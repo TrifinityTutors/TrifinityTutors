@@ -1,4 +1,8 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+/* eslint-disable react-refresh/only-export-components */
+import { createFileRoute } from "@tanstack/react-router";
+import { Link, useNavigate } from "react-router-dom";
+import { useState } from "react";
+import { GoogleLogin } from "@react-oauth/google";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -8,14 +12,69 @@ export const Route = createFileRoute("/auth/login")({
 });
 
 function LoginPage() {
+  const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
+  const [errors, setErrors] = useState({});
+
+  const handleGoogleLogin = async (credentialResponse) => {
+    setErrors({});
+    setLoading(true);
+
+    try {
+      if (!credentialResponse?.credential) {
+        throw new Error("Google authentication failed.");
+      }
+
+      const response = await fetch("http://localhost:5000/api/students/google-signup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token: credentialResponse.credential }),
+      });
+      const data = await response.json();
+
+      if (!response.ok || !data.success) {
+        throw new Error(data.message || "Google login failed. Please try again.");
+      }
+
+      localStorage.setItem("token", data.token || `google-${Date.now()}`);
+      localStorage.setItem("user", JSON.stringify({
+        name: data.user?.name || "",
+        email: data.user?.email || "",
+        role: "student",
+        googleId: data.user?.googleId || "",
+      }));
+      navigate("/student-dashboard");
+    } catch (error) {
+      setErrors({ submit: error.message || "Google login failed. Please try again." });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div>
       <h1 className="font-display text-3xl font-bold">Welcome back</h1>
       <p className="mt-2 text-muted-foreground">Log in to continue your learning journey.</p>
 
-      <Button variant="outline" className="mt-8 w-full h-11 gap-3">
-        <GoogleIcon /> Continue with Google
-      </Button>
+      <div className="mt-8 w-full">
+        <GoogleLogin
+          onSuccess={handleGoogleLogin}
+          onError={() => setErrors({ submit: "Google authentication failed. Please try again." })}
+          render={(renderProps) => (
+            <button
+              type="button"
+              onClick={renderProps.onClick}
+              disabled={renderProps.disabled || loading}
+              className="w-full h-11 rounded-xl border border-gray-200 bg-white text-sm font-semibold text-slate-900 transition hover:border-slate-300 disabled:opacity-50 flex items-center justify-center gap-2"
+            >
+              <GoogleIcon />
+              {loading ? "Signing in..." : "Continue with Google"}
+            </button>
+          )}
+        />
+      </div>
+
+      {errors.submit && <p className="mt-3 text-sm text-red-600 font-medium">{errors.submit}</p>}
 
       <div className="my-6 flex items-center gap-3 text-xs text-muted-foreground">
         <div className="h-px flex-1 bg-border" /> OR <div className="h-px flex-1 bg-border" />
@@ -51,3 +110,4 @@ function GoogleIcon() {
     </svg>
   );
 }
+export default LoginPage;

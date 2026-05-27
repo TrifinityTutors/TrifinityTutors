@@ -161,8 +161,8 @@ function TutorRegister() {
                 placeholder="Email from your account"
                 value={form.email}
                 onChange={handleChange}
-                readOnly
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-600 cursor-not-allowed"
+                required
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-white text-gray-900 hover:border-gray-400 focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
               />
               {errors.email && <span className="text-red-600 text-sm font-medium mt-1 inline-block">❌ {errors.email}</span>}
             </div>
