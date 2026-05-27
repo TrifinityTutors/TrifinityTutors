@@ -1,23 +1,29 @@
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { GraduationCap, Menu, X } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { useAuth } from "@/lib/auth";
+import { useAuth, dashboardPathFor } from "@/lib/auth";
 import { ProfileDropdown } from "@/components/ProfileDropdown";
 
 const links = [
   { to: "/tutors", label: "Find Tutors" },
   { to: "/register-tutor", label: "Become a Tutor" },
-  { to: "/auth/login", label: "Student" },
-  { to: "/tutor-login", label: "Tutor" },
-  { to: "/admin-login", label: "Admin" },
+  { to: "/auth/login", label: "Student", roleTarget: "student" },
+  { to: "/tutor-login", label: "Tutor", roleTarget: "tutor" },
+  { to: "/admin-login", label: "Admin", roleTarget: "admin" },
 ];
 
 export function Navbar() {
   const [open, setOpen] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
   const path = location.pathname;
   const { user, logout } = useAuth();
+
+  const getNavLink = (link) => {
+    if (!user || !link.roleTarget) return link.to;
+    return user.role === link.roleTarget ? dashboardPathFor(user.role) : link.to;
+  };
 
   return (
     <header className="sticky top-0 z-50 w-full bg-white/90 backdrop-blur shadow-sm border-b border-slate-200">
@@ -32,17 +38,20 @@ export function Navbar() {
         </Link>
 
         <nav className="hidden items-center gap-4 md:flex">
-          {links.map((l) => (
-            <Link
-              key={l.to}
-              to={l.to}
-              className={`text-sm font-medium transition-colors ${
-                path === l.to ? "text-slate-900" : "text-slate-600 hover:text-slate-900"
-              }`}
-            >
-              {l.label}
-            </Link>
-          ))}
+          {links.map((l) => {
+            const destination = getNavLink(l);
+            return (
+              <Link
+                key={l.to}
+                to={destination}
+                className={`text-sm font-medium transition-colors ${
+                  path === destination ? "text-slate-900" : "text-slate-600 hover:text-slate-900"
+                }`}
+              >
+                {l.label}
+              </Link>
+            );
+          })}
         </nav>
 
         <div className="hidden items-center gap-3 md:flex">
@@ -74,22 +83,31 @@ export function Navbar() {
 
       {open && (
           <div className="md:hidden border-t border-gray-200 px-4 py-3 space-y-1">
-            {links.map((l) => (
-              <Link
-                key={l.to}
-                to={l.to}
-                onClick={() => setOpen(false)}
-                className="block rounded-lg px-3 py-2 text-sm font-medium hover:bg-gray-100 text-gray-700"
-              >
-                {l.label}
-              </Link>
-            ))}
+            {links.map((l) => {
+              const destination = getNavLink(l);
+              return (
+                <Link
+                  key={l.to}
+                  to={destination}
+                  onClick={() => setOpen(false)}
+                  className="block rounded-lg px-3 py-2 text-sm font-medium hover:bg-gray-100 text-gray-700"
+                >
+                  {l.label}
+                </Link>
+              );
+            })}
             <div className="flex gap-2 pt-2">
               {user ? (
                 <>
-                  <Link to="/tutor-profile" onClick={() => setOpen(false)} className="block rounded-lg px-3 py-2 text-sm font-medium hover:bg-gray-100 text-gray-700">
-                    Profile
+                  <Link to={user.role === "student" ? "/student/profile" : "/tutor-profile"} onClick={() => setOpen(false)} className="block rounded-lg px-3 py-2 text-sm font-medium hover:bg-gray-100 text-gray-700">
+                    View Profile
                   </Link>
+                  <Link to={user.role === "student" ? "/student/edit-profile" : "/tutor-profile"} onClick={() => setOpen(false)} className="block rounded-lg px-3 py-2 text-sm font-medium hover:bg-gray-100 text-gray-700">
+                    Edit Profile
+                  </Link>
+                  <button onClick={() => { navigate(user.role === "student" ? "/student/edit-profile" : "/tutor-profile", { state: { openPhotoUpload: true } }); setOpen(false); }} className="block rounded-lg px-3 py-2 text-sm font-medium hover:bg-gray-100 text-gray-700">
+                    Change Photo
+                  </button>
                   <button onClick={() => { logout(); setOpen(false); }} className="block rounded-lg px-3 py-2 text-sm font-medium text-red-600">
                     Logout
                   </button>

@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Lock } from "lucide-react";
-import Navbar from "@/components/Navbar";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -56,7 +55,6 @@ function Checkout() {
   if (!bookingDetails) {
     return (
       <div className="min-h-screen bg-gray-50">
-        <Navbar />
         <div className="mx-auto max-w-2xl px-4 py-20 text-center sm:px-6">
           <p className="text-xl font-semibold text-gray-900">Loading...</p>
         </div>
@@ -72,8 +70,6 @@ function Checkout() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Navbar />
-
       <div className="mx-auto max-w-4xl px-4 py-8 sm:px-6 lg:px-8">
         <button
           onClick={() => {

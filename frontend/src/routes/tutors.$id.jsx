@@ -1,6 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Star, MapPin, Calendar, MessageCircle, Award, Clock, GraduationCap, Languages, CheckCircle2, ArrowLeft } from "lucide-react";
-import { SiteLayout } from "@/components/SiteLayout";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -16,7 +15,7 @@ function TutorProfilePage() {
 
   if (!tutor) {
     return (
-      <SiteLayout>
+      <>
         <div className="mx-auto max-w-4xl px-4 py-20 text-center sm:px-6">
           <p className="text-xl font-semibold text-foreground">Tutor not found</p>
           <p className="mt-3 text-muted-foreground">The requested tutor profile does not exist.</p>
@@ -27,12 +26,12 @@ function TutorProfilePage() {
             Back to tutors
           </Link>
         </div>
-      </SiteLayout>
+      </>
     );
   }
 
   return (
-    <SiteLayout>
+    <>
       <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
         <Link to="/tutors" className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground">
           <ArrowLeft className="h-4 w-4" /> Back to tutors

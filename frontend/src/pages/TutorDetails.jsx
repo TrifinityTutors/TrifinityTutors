@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
 import { ArrowLeft, Star, MapPin, MessageSquare, Calendar, CheckCircle2 } from "lucide-react";
-import Navbar from "@/components/Navbar";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -72,7 +71,6 @@ function TutorDetails() {
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50">
-        <Navbar />
         <div className="flex min-h-[calc(100vh-80px)] items-center justify-center px-4 py-20 text-gray-700">Loading tutor profile…</div>
       </div>
     );
@@ -81,7 +79,6 @@ function TutorDetails() {
   if (error || !tutor) {
     return (
       <div className="min-h-screen bg-gray-50">
-        <Navbar />
         <div className="mx-auto max-w-4xl px-4 py-20 text-center sm:px-6">
           <p className="text-xl font-semibold text-gray-900">Tutor not found</p>
           <p className="mt-3 text-gray-600">{error || "The tutor profile you requested does not exist."}</p>
@@ -98,7 +95,6 @@ function TutorDetails() {
 
   return (
     <div className="min-h-screen bg-slate-50">
-      <Navbar />
       <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
         <div className="mb-4 flex items-center gap-3 text-sm text-gray-600">
           <Link to="/tutors" className="inline-flex items-center gap-2 rounded-full border border-gray-200 bg-white px-3 py-2 hover:bg-gray-50">

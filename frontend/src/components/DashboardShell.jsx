@@ -1,5 +1,6 @@
 import React from "react";
 import { useLocation, Link, useNavigate } from "react-router-dom";
+import { useAuth } from "@/lib/auth";
 import { GraduationCap, Bell, Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -9,30 +10,25 @@ export function DashboardShell({ children, navItems, title, role }) {
   const location = useLocation();
   const navigate = useNavigate();
 
-  const tutorData = React.useMemo(() => {
+  const { user, logout } = useAuth();
+  const currentUser = user || React.useMemo(() => {
     try {
-      return JSON.parse(localStorage.getItem("tutor")) || {};
+      return JSON.parse(localStorage.getItem("user")) || JSON.parse(localStorage.getItem("student")) || JSON.parse(localStorage.getItem("tutor")) || {};
     } catch {
       return {};
     }
   }, []);
 
-  const tutorName = tutorData?.name || tutorData?.fullName || "Tutor";
-  const tutorImage = tutorData?.profilePhoto || tutorData?.photo || "";
-  const greeting = `Welcome back${tutorName ? `, ${tutorName}` : ""}`;
+  const userName = currentUser?.name || currentUser?.fullName || "";
+  const effectiveRole = currentUser?.role ? `${currentUser.role.charAt(0).toUpperCase()}${currentUser.role.slice(1)}` : role || "";
+  const greeting = `Welcome back${userName ? `, ${userName}` : ""}`;
 
   const handleLogout = () => {
-    // Clear localStorage
-    localStorage.removeItem("token");
-    localStorage.removeItem("tutor");
-    localStorage.removeItem("student");
-    
-    // Redirect to home
-    window.location.href = "/";
+    logout();
   };
 
   const handleProfileLogout = () => {
-    handleLogout();
+    logout();
   };
 
   return (
@@ -85,10 +81,10 @@ export function DashboardShell({ children, navItems, title, role }) {
           </div>
           <div className="border-t border-gray-200 p-4">
             <div className="flex items-center gap-3">
-              <ProfileDropdown tutorData={tutorData} onLogout={handleProfileLogout} />
+              <ProfileDropdown userData={currentUser} onLogout={handleProfileLogout} />
               <div className="flex-1 min-w-0">
-                <div className="text-sm font-semibold truncate">{tutorName}</div>
-                <div className="text-xs text-gray-500 truncate">{role}</div>
+                <div className="text-sm font-semibold truncate">{userName}</div>
+                <div className="text-xs text-gray-500 truncate">{effectiveRole}</div>
               </div>
             </div>
           </div>
@@ -107,7 +103,7 @@ export function DashboardShell({ children, navItems, title, role }) {
                   <Bell className="h-5 w-5" />
                   <span className="absolute top-2 right-2 h-2 w-2 rounded-full bg-red-500" />
                 </Button>
-                <ProfileDropdown tutorData={tutorData} onLogout={handleLogout} />
+                <ProfileDropdown userData={currentUser} onLogout={handleLogout} />
               </div>
               <p className="text-sm text-gray-600">{greeting}</p>
             </div>

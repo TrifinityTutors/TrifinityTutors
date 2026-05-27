@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft, MapPin, Star } from "lucide-react";
 import axios from "axios";
-import Navbar from "@/components/Navbar";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 
@@ -65,7 +64,6 @@ function BookingSession() {
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50">
-        <Navbar />
         <div className="flex min-h-[calc(100vh-80px)] items-center justify-center px-4 py-20 text-gray-700">
           Loading tutor details…
         </div>
@@ -76,7 +74,6 @@ function BookingSession() {
   if (error || !tutor) {
     return (
       <div className="min-h-screen bg-gray-50">
-        <Navbar />
         <div className="mx-auto max-w-4xl px-4 py-20 text-center sm:px-6">
           <p className="text-xl font-semibold text-gray-900">Tutor not found</p>
           <Button
@@ -121,8 +118,6 @@ function BookingSession() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Navbar />
-
       <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
         <button
           onClick={() => navigate(`/tutors/${id}`)}

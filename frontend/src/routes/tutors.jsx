@@ -1,7 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { Search, MapPin, Star, Heart, ArrowRight, Filter, SlidersHorizontal } from "lucide-react";
-import { SiteLayout } from "@/components/SiteLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
@@ -108,7 +107,7 @@ function TutorsPage() {
   }, [searchTerm, locationTerm, selectedSubjects, ratingFilters, price, sortOption]);
 
   return (
-    <SiteLayout>
+    <>
       <div className="border-b border-border bg-gradient-soft">
         <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
           <h1 className="font-display text-3xl font-bold sm:text-4xl">Find your perfect tutor</h1>
@@ -193,7 +192,7 @@ function TutorsPage() {
           </div>
         </div>
       </div>
-    </SiteLayout>
+    </>
   );
 }
 

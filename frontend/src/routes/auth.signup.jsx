@@ -7,6 +7,7 @@ import { GoogleLogin } from "@react-oauth/google";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useAuth } from "@/lib/auth";
 
 export const Route = createFileRoute("/auth/signup")({
   component: SignupPage,
@@ -14,6 +15,7 @@ export const Route = createFileRoute("/auth/signup")({
 
 function SignupPage() {
   const navigate = useNavigate();
+  const { setSession } = useAuth();
   const [role, setRole] = useState("student");
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
@@ -39,19 +41,23 @@ function SignupPage() {
         throw new Error(data.message || "Google sign in failed. Please try again.");
       }
 
-      localStorage.setItem("token", data.token || `google-${Date.now()}`);
-      localStorage.setItem(
-        "user",
-        JSON.stringify({
-          name: data.user?.name || "",
-          email: data.user?.email || "",
-          role,
-          googleId: data.user?.googleId || "",
-        })
-      );
+      const userRole = role === "tutor" ? "tutor" : "student";
+      const authUser = {
+        _id: data.user?._id || data.user?.id,
+        id: data.user?.id || data.user?._id,
+        name: data.user?.name || "",
+        email: data.user?.email || "",
+        role: userRole,
+        googleId: data.user?.googleId || "",
+        photo: data.user?.photo || "",
+        profileComplete: data.isProfileComplete ?? data.user?.profileComplete,
+        status: data.status || data.user?.status,
+      };
+
+      setSession(data.token, authUser);
 
       if (role === "tutor") {
-        navigate("/register-tutor");
+        navigate(data.isProfileComplete ? "/tutor-dashboard" : "/register-tutor");
       } else {
         navigate("/student-dashboard");
       }

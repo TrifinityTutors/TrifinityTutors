@@ -8,39 +8,45 @@ import {
   DropdownMenuSeparator,
   DropdownMenuLabel,
 } from "@/components/ui/dropdown-menu"
+import { clearAuthSession, useAuth } from "@/lib/auth"
 import { Edit3, User, Image, LogOut } from "lucide-react"
 
-export function ProfileDropdown({ tutorData = {}, onLogout }) {
+export function ProfileDropdown({ userData, tutorData, onLogout }) {
+  const { user: authUser, logout } = useAuth()
   const navigate = useNavigate()
   const [isOpen, setIsOpen] = useState(false)
 
-  const tutorName = tutorData?.name || tutorData?.fullName || "Tutor"
-  const tutorImage = tutorData?.profilePhoto || tutorData?.photo || ""
-  const tutorEmail = tutorData?.email || ""
+  const user = userData || tutorData || authUser || {}
+  const name = user?.name || user?.fullName || user?.firstName || user?.displayName || ""
+  const image = user?.profilePhoto || user?.photo || user?.avatar || user?.image || ""
+  const email = user?.email || ""
 
   const handleViewProfile = () => {
     setIsOpen(false)
-    navigate("/tutor-profile")
+    if (user?.role === "student") navigate("/student/profile")
+    else navigate("/tutor-profile")
   }
 
   const handleEditProfile = () => {
     setIsOpen(false)
-    // Scroll to edit section on profile page
-    navigate("/tutor-profile", { state: { scrollTo: "edit" } })
+    if (user?.role === "student") navigate("/student/edit-profile")
+    else navigate("/tutor-profile", { state: { scrollTo: "edit" } })
   }
 
   const handleChangePhoto = () => {
     setIsOpen(false)
-    navigate("/tutor-profile", { state: { openPhotoUpload: true } })
+    if (user?.role === "student") navigate("/student/edit-profile", { state: { openPhotoUpload: true } })
+    else navigate("/tutor-profile", { state: { openPhotoUpload: true } })
   }
 
   const handleLogout = () => {
     setIsOpen(false)
     if (onLogout) {
       onLogout()
+    } else if (logout) {
+      logout()
     } else {
-      localStorage.removeItem("token")
-      localStorage.removeItem("tutor")
+      clearAuthSession()
       window.location.href = "/"
     }
   }
@@ -52,15 +58,15 @@ export function ProfileDropdown({ tutorData = {}, onLogout }) {
           className="relative h-9 w-9 rounded-full overflow-hidden hover:ring-2 hover:ring-blue-500 hover:ring-offset-2 transition-all cursor-pointer flex-shrink-0"
           aria-label="Profile menu"
         >
-          {tutorImage ? (
+          {image ? (
             <img
-              src={tutorImage}
-              alt={tutorName}
+              src={image}
+              alt={name}
               className="h-full w-full object-cover"
             />
           ) : (
             <div className="h-full w-full rounded-full bg-gradient-to-br from-blue-400 to-indigo-500 flex items-center justify-center text-white font-semibold text-xs">
-              {tutorName.charAt(0).toUpperCase()}
+              {(name && name.charAt ? name.charAt(0).toUpperCase() : "U")}
             </div>
           )}
         </button>
@@ -68,8 +74,8 @@ export function ProfileDropdown({ tutorData = {}, onLogout }) {
 
       <DropdownMenuContent align="end" className="w-56">
         <div className="px-2 py-1.5">
-          <DropdownMenuLabel className="font-semibold">{tutorName}</DropdownMenuLabel>
-          <p className="text-xs text-gray-500 truncate">{tutorEmail}</p>
+          <DropdownMenuLabel className="font-semibold">{name}</DropdownMenuLabel>
+          <p className="text-xs text-gray-500 truncate">{email}</p>
         </div>
 
         <DropdownMenuSeparator />

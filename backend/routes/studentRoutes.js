@@ -4,8 +4,10 @@ const router = express.Router()
 const StudentRequest = require("../models/StudentRequest")
 const Application = require("../models/Application")
 const Tutor = require("../models/Tutor")
+const Student = require("../models/Student")
 
 const auth = require("../middleware/auth");
+const jwt = require("jsonwebtoken");
 const { OAuth2Client } = require("google-auth-library");
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
@@ -63,20 +65,49 @@ router.post("/google-signup", async (req, res) => {
     const payload = ticket.getPayload();
     const { name, email, picture, sub } = payload;
     
-    console.log("🔐 Google OAuth - Processing signup for:", email);
-    
-    // Store basic student info for later profile completion
-    const studentData = {
-      name,
-      email,
-      googleId: sub,
-      photo: picture,
-      role: "student"
-    };
+    console.log("🔐 Google OAuth - Processing student signup/login for:", email);
+
+    let student = await Student.findOne({ email });
+    if (student) {
+      student.name = name || student.name;
+      student.photo = picture || student.photo;
+      student.googleId = sub || student.googleId;
+      await student.save();
+      console.log("✅ Existing student refreshed:", email);
+    } else {
+      student = await Student.create({
+        name,
+        email,
+        googleId: sub,
+        photo: picture,
+        role: "student"
+      });
+      console.log("✅ Created new student:", email);
+    }
+
+    const tokenJwt = jwt.sign({ id: student._id, role: student.role }, process.env.JWT_SECRET, {
+      expiresIn: "7d",
+    });
 
     res.json({
       success: true,
-      user: studentData,
+      token: tokenJwt,
+      user: {
+        _id: student._id,
+        id: student._id,
+        name: student.name,
+        email: student.email,
+        googleId: student.googleId,
+        photo: student.photo,
+        avatar: student.avatar || student.photo,
+        bio: student.bio || "",
+        phone: student.phone || "",
+        preferredSubjects: student.preferredSubjects || [],
+        location: student.location || "",
+        bookedSessions: student.bookedSessions || [],
+        savedTutors: student.savedTutors || [],
+        role: student.role,
+      },
       message: "Student authenticated with Google"
     });
 
@@ -86,6 +117,87 @@ router.post("/google-signup", async (req, res) => {
       success: false,
       message: "Google signup failed"
     });
+  }
+});
+
+router.get("/me", auth, async (req, res) => {
+  try {
+    if (req.user.role !== "student") {
+      return res.status(403).json({ message: "Forbidden" });
+    }
+
+    const student = await Student.findById(req.user.id).select("-__v");
+    if (!student) {
+      return res.status(404).json({ message: "Student not found" });
+    }
+
+    res.json({
+      success: true,
+      user: {
+        _id: student._id,
+        id: student._id,
+        name: student.name,
+        email: student.email,
+        googleId: student.googleId,
+        photo: student.photo,
+        avatar: student.avatar || student.photo,
+        bio: student.bio || "",
+        phone: student.phone || "",
+        preferredSubjects: student.preferredSubjects || [],
+        location: student.location || "",
+        bookedSessions: student.bookedSessions || [],
+        savedTutors: student.savedTutors || [],
+        role: student.role,
+      }
+    });
+  } catch (err) {
+    console.error("❌ Error loading student profile:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+// NEW: GET profile (alias to /me)
+router.get("/profile", auth, async (req, res) => {
+  try {
+    if (req.user.role !== "student") {
+      return res.status(403).json({ message: "Forbidden" });
+    }
+
+    const student = await Student.findById(req.user.id).select("-__v");
+    if (!student) return res.status(404).json({ message: "Student not found" });
+
+    res.json({
+      success: true,
+      profile: student
+    });
+  } catch (err) {
+    console.error("Error getting profile:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+// NEW: Update student profile
+router.put("/profile", auth, async (req, res) => {
+  try {
+    if (req.user.role !== "student") {
+      return res.status(403).json({ message: "Forbidden" });
+    }
+
+    const updates = (({ name, avatar, photo, bio, phone, preferredSubjects, location }) => ({ name, avatar, photo, bio, phone, preferredSubjects, location }))(req.body);
+
+    const student = await Student.findById(req.user.id);
+    if (!student) return res.status(404).json({ message: "Student not found" });
+
+    Object.keys(updates).forEach(k => {
+      if (updates[k] !== undefined) student[k] = updates[k];
+    });
+
+    await student.save();
+
+    res.json({ success: true, profile: student });
+  } catch (err) {
+    console.error("Error updating profile:", err);
+    res.status(500).json({ message: "Server error" });
   }
 });
 
@@ -198,26 +310,37 @@ router.post("/tutor", async (req, res) => {
 
 // Tutor login
 router.post("/tutor-login", async (req, res) => {
-  const { email, password } = req.body
+  try {
+    const { email, password } = req.body;
+    const tutor = await Tutor.findOne({ email });
 
-  const tutor = await Tutor.findOne({ email })
+    if (!tutor) {
+      return res.status(404).json({ message: "Tutor not found" });
+    }
 
-  if (!tutor) {
-    return res.json({ message: "Tutor not found" })
+    if (tutor.password !== password) {
+      return res.status(400).json({ message: "Incorrect password" });
+    }
+
+    const token = jwt.sign({ id: tutor._id, role: "tutor" }, process.env.JWT_SECRET, {
+      expiresIn: "7d",
+    });
+
+    const tutorData = tutor.toObject();
+    delete tutorData.password;
+
+    res.json({
+      message: "Login successful",
+      token,
+      user: {
+        ...tutorData,
+        role: "tutor"
+      }
+    });
+  } catch (err) {
+    console.error("❌ Tutor login error:", err);
+    res.status(500).json({ message: "Server error" });
   }
-
-  if (tutor.password !== password) {
-    return res.json({ message: "Incorrect password" })
-  }
-
-  // Generate a simple token (in production, use JWT)
-  const token = `token_${tutor._id}_${Date.now()}`
-
-  res.json({
-    message: "Login successful",
-    token: token,
-    user: tutor
-  })
 })
 
 

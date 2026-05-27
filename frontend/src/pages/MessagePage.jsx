@@ -2,7 +2,6 @@ import axios from "axios";
 import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft, Lock, Search, Send, MessageCircle } from "lucide-react";
-import Navbar from "@/components/Navbar";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { getTutorById } from "@/data/tutors";
@@ -87,7 +86,6 @@ function MessagePage() {
   if (loadingTutor) {
     return (
       <div className="min-h-screen bg-slate-50">
-        <Navbar />
         <div className="flex min-h-[calc(100vh-80px)] items-center justify-center px-4 py-20 text-slate-700">
           Loading tutor chat…
         </div>
@@ -98,7 +96,6 @@ function MessagePage() {
   if (!tutor) {
     return (
       <div className="min-h-screen bg-slate-50">
-        <Navbar />
         <div className="mx-auto max-w-4xl px-4 py-20 text-center sm:px-6">
           <p className="text-xl font-semibold text-slate-900">Tutor not found</p>
           <p className="mt-3 text-slate-600">We couldn't find the tutor you're trying to message.</p>
@@ -171,7 +168,6 @@ function MessagePage() {
 
   return (
     <div className="min-h-screen bg-slate-50">
-      <Navbar />
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         <div className="grid gap-6 lg:grid-cols-[300px_minmax(0,1fr)]">
           <aside className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm lg:sticky lg:top-6">

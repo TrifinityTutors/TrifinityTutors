@@ -84,8 +84,16 @@ router.post("/google-login", async (req, res) => {
     res.json({
       success: true,
       token: jwtToken,
-      user,  // This is Tutoruser, contains Tutoruser._id
-      isProfileComplete: isProfileComplete,
+      user: {
+        _id: user._id,
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        photo: user.photo,
+        googleId: user.googleId,
+        role: user.role,
+      },
+      isProfileComplete,
       status: tutorProfile?.status || null
     });
 

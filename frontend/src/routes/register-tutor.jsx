@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/lib/auth";
 import { Check, Upload, ArrowRight, ArrowLeft, User, GraduationCap, BookOpen, DollarSign } from "lucide-react";
 import { SiteLayout } from "@/components/SiteLayout";
 import { Button } from "@/components/ui/button";
@@ -24,6 +25,7 @@ const steps = [
 const allSubjects = ["Mathematics","Physics","Chemistry","Biology","English","Computer Science","Economics","History","French","Spanish","Music","Art","Calculus","Algebra","Python","JavaScript","SAT Prep","IELTS"];
 
 function RegisterTutorPage() {
+  const { setSession } = useAuth();
   const navigate = useNavigate();
   const [step, setStep] = useState(0);
   const [isSaving, setIsSaving] = useState(false);
@@ -201,7 +203,14 @@ function RegisterTutorPage() {
       }
 
       setSuccess("Your tutor profile is submitted successfully. Redirecting to your dashboard...");
-      localStorage.setItem("tutor", JSON.stringify({ ...(result.tutor || {}), profileComplete: true }));
+      const currentUser = JSON.parse(localStorage.getItem("user") || "{}") || {};
+      const updatedTutor = {
+        ...currentUser,
+        ...(result.tutor || {}),
+        profileComplete: true,
+        role: "tutor",
+      };
+      setSession(token, updatedTutor);
       setTimeout(() => {
         navigate("/tutor-dashboard");
       }, 400);
@@ -214,7 +223,7 @@ function RegisterTutorPage() {
   };
 
   return (
-    <SiteLayout>
+    <>
       <div className="mx-auto max-w-5xl px-4 py-10 sm:px-6 lg:px-8">
         <div className="space-y-8">
           <div className="bg-white rounded-[2rem] border border-slate-200 p-6 sm:p-10 shadow-[0_48px_100px_-56px_rgba(15,23,42,0.2)]">
@@ -431,7 +440,7 @@ function RegisterTutorPage() {
           {/* Bottom 'What students will see' panel removed per request */}
         </div>
       </div>
-    </SiteLayout>
+    </>
   );
 }
 

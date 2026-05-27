@@ -6,7 +6,6 @@ import {
   Star, Calculator, FlaskConical, Code2, Languages, Music, Palette,
   BookOpen, ChevronDown, ChevronLeft, ChevronRight, Check, Quote,
 } from "lucide-react";
-import { SiteLayout } from "@/components/SiteLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
@@ -57,7 +56,7 @@ const faqs = [
 
 function LandingPage() {
   return (
-    <SiteLayout>
+    <>
       <Hero />
       <TrustedBy />
       <Subjects />
@@ -66,7 +65,7 @@ function LandingPage() {
       <Testimonials />
       <FAQ />
       <CTABand />
-    </SiteLayout>
+    </>
   );
 }
 

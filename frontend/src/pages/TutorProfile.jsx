@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react"
 import { useLocation, useNavigate } from "react-router-dom"
 import axios from "axios"
+import { useAuth } from "@/lib/auth"
 import { DashLayout } from "@/components/dash/DashLayout"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -13,6 +14,7 @@ import "./TutorProfile.css"
 function TutorProfile() {
   const location = useLocation()
   const navigate = useNavigate()
+  const { token, user: authUser, setSession } = useAuth()
   const [tutor, setTutor] = useState(null)
   const [isEditing, setIsEditing] = useState(false)
   const [loading, setLoading] = useState(true)
@@ -42,8 +44,13 @@ function TutorProfile() {
 
   // Fetch tutor profile on mount
   useEffect(() => {
-    fetchProfile()
-  }, [])
+    if (token) {
+      fetchProfile()
+    } else {
+      setError("Please login to view profile")
+      setLoading(false)
+    }
+  }, [token])
 
   // Handle navigation state for opening photo upload or edit
   useEffect(() => {
@@ -64,7 +71,7 @@ function TutorProfile() {
 
   const fetchProfile = async () => {
     try {
-      const tutorData = JSON.parse(localStorage.getItem("tutor"))
+      const tutorData = authUser || JSON.parse(localStorage.getItem("tutor"))
       if (!tutorData || !tutorData._id) {
         setError("Please login to view profile")
         setLoading(false)
@@ -72,7 +79,12 @@ function TutorProfile() {
       }
 
       const response = await axios.get(
-        `http://localhost:5000/api/tutors/profile/${tutorData._id}`
+        `http://localhost:5000/api/tutors/profile/${tutorData._id}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
       )
 
       const profile = response.data
@@ -92,7 +104,7 @@ function TutorProfile() {
         availability: Array.isArray(profile.availability) ? profile.availability.join(", ") : (profile.availability || "")
       })
 
-      localStorage.setItem("tutor", JSON.stringify(profile))
+      setSession(token, { ...authUser, ...profile, role: "tutor", profileComplete: true })
       setError(null)
     } catch (err) {
       console.error("Error fetching profile:", err)
@@ -138,7 +150,7 @@ function TutorProfile() {
 
   const handleSaveProfile = async () => {
     try {
-      const tutorData = JSON.parse(localStorage.getItem("tutor"))
+      const tutorData = authUser || JSON.parse(localStorage.getItem("tutor"))
       const hasFiles = profilePhotoFile || documentFiles.length > 0
       let response
 
@@ -168,12 +180,22 @@ function TutorProfile() {
         response = await axios.put(
           `http://localhost:5000/api/tutors/profile/${tutorData._id}`,
           submitForm,
-          { headers: { "Content-Type": "multipart/form-data" } }
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "multipart/form-data",
+            },
+          }
         )
       } else {
         response = await axios.put(
           `http://localhost:5000/api/tutors/profile/${tutorData._id}`,
-          formData
+          formData,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
         )
       }
 
@@ -184,8 +206,7 @@ function TutorProfile() {
       setDocumentFiles([])
       setProfilePhotoPreview("")
 
-      // Update localStorage
-      localStorage.setItem("tutor", JSON.stringify(response.data.tutor))
+      setSession(token, { ...authUser, ...response.data.tutor, role: "tutor", profileComplete: true })
 
       setTimeout(() => setSuccessMessage(null), 3000)
     } catch (err) {
@@ -218,7 +239,8 @@ function TutorProfile() {
         formDataWithFile,
         {
           headers: {
-            "Content-Type": "multipart/form-data"
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "multipart/form-data",
           }
         }
       )
@@ -249,13 +271,18 @@ function TutorProfile() {
         return
       }
 
-      const tutorData = JSON.parse(localStorage.getItem("tutor"))
+      const tutorData = authUser || JSON.parse(localStorage.getItem("tutor"))
       const response = await axios.post(
         `http://localhost:5000/api/tutors/request-verification/${tutorData._id}`,
         {
           bio: formData.bio,
           qualifications: formData.qualifications,
           teachingMethodology: formData.teachingMethodology
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         }
       )
 
@@ -270,7 +297,7 @@ function TutorProfile() {
 
   const handleDownloadCV = () => {
     if (tutor?.cvFile) {
-      const tutorData = JSON.parse(localStorage.getItem("tutor"))
+      const tutorData = authUser || JSON.parse(localStorage.getItem("tutor"))
       window.open(
         `http://localhost:5000/api/tutors/download-cv/${tutorData._id}`,
         "_blank"
