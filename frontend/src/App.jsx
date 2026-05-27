@@ -7,9 +7,9 @@ import TutorDashboard from "./pages/TutorDashboard"
 import StudentDashboard from "./pages/StudentDashboard"
 import AdminDashboard from "./pages/AdminDashboard"
 import Tutors from "./pages/Tutors"
-import Auth from "./pages/Auth"
-import SignupPage from "./pages/SignupPage"
-import LoginPage from "./pages/LoginPage"
+import AuthLayout from "./routes/auth"
+import SignupPage from "./routes/auth.signup"
+import LoginPage from "./routes/auth.login"
 
 import Login from "./admin/pages/Login";
 import AdminRoute from "./admin/components/AdminRoute";
@@ -42,20 +42,11 @@ function App() {
         } />
 
         <Route path="/auth" element={
-          <Auth />
-        } />
-
-        <Route path="/auth/login" element={
-          <MainLayout>
-            <LoginPage />
-          </MainLayout>
-        } />
-
-        <Route path="/auth/signup" element={
-          <MainLayout>
-            <SignupPage />
-          </MainLayout>
-        } />
+          <AuthLayout />
+        }>
+          <Route path="login" element={<LoginPage />} />
+          <Route path="signup" element={<SignupPage />} />
+        </Route>
 
         <Route path="/student-register" element={
           <MainLayout>

@@ -45,19 +45,10 @@ function TutorLogin() {
         });
 
         // Check if new tutor (profile not complete)
-        const isProfileComplete = Boolean(data.user?.profileComplete) || 
-                                 Boolean(data.user?.subject) || 
-                                 Boolean(data.user?.hourlyRate);
-
-        if (!isProfileComplete) {
-          console.log("🆕 New tutor detected, redirecting to registration...");
-          alert("Welcome! Please complete your profile.");
-          navigate('/register-tutor', { replace: true });
-          return;
-        }
-
-        // Existing tutor - verify profile and redirect to dashboard
-        console.log("✅ Existing tutor, verifying profile...");
+        // Verify the tutor profile before redirecting.
+        // This ensures existing tutors with saved profiles go to the dashboard,
+        // even if the returned user object does not include profileComplete.
+        console.log("🔎 Verifying tutor profile after login...");
         await redirectAfterAuth(data.user, data.token);
       } else {
         alert(data.message || "Login failed. Please try again.");
@@ -108,15 +99,7 @@ function TutorLogin() {
         })
       );
 
-      // 🆕 New tutor - no Tutor profile document yet
-      if (data.isProfileComplete === false) {
-        console.log("🆕 New Google user detected, redirecting to registration form...");
-        navigate('/register-tutor', { replace: true });
-        return;
-      }
-
-      // ✅ Existing tutor - profile already complete
-      console.log("✅ Existing tutor with complete profile, verifying...");
+      console.log("🔎 Verifying tutor profile after Google login...");
       await redirectAfterAuth(data.user, data.token);
     } catch (err) {
       console.error("❌ Google login error:", err);

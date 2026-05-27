@@ -1,4 +1,5 @@
-import { createFileRoute, Link, Outlet, useRouterState } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
+import { Link, Outlet, useLocation } from "react-router-dom";
 import { GraduationCap, ArrowLeft } from "lucide-react";
 
 export const Route = createFileRoute("/auth")({
@@ -6,8 +7,8 @@ export const Route = createFileRoute("/auth")({
 });
 
 function AuthLayout() {
-  const path = useRouterState({ select: r => r.location.pathname });
-  const isLogin = path.includes("login");
+  const location = useLocation();
+  const isLogin = location.pathname.includes("login");
   return (
     <div className="min-h-screen bg-gradient-mesh grid lg:grid-cols-2">
       <div className="hidden lg:flex relative overflow-hidden bg-gradient-primary text-primary-foreground p-12 flex-col justify-between">
@@ -58,3 +59,4 @@ function AuthLayout() {
     </div>
   );
 }
+export default AuthLayout
