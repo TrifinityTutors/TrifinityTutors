@@ -3,19 +3,11 @@ import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 
 function Checkout() {
   const navigate = useNavigate();
   const [bookingDetails, setBookingDetails] = useState(null);
-  const [paymentMethod, setPaymentMethod] = useState("card");
   const [loading, setLoading] = useState(false);
-  const [formData, setFormData] = useState({
-    cardNumber: "",
-    cardName: "",
-    expiry: "",
-    cvc: "",
-  });
 
   useEffect(() => {
     const details = localStorage.getItem("bookingDetails");
@@ -26,28 +18,61 @@ function Checkout() {
     setBookingDetails(JSON.parse(details));
   }, [navigate]);
 
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-  };
-
-  const handlePayment = async (e) => {
-    e.preventDefault();
+  const handlePayment = async () => {
     setLoading(true);
 
     try {
-      // Simulate payment processing
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      alert("Payment successful! Your session has been booked.");
-      localStorage.removeItem("bookingDetails");
-      navigate("/student-dashboard");
+      const token = localStorage.getItem("token");
+
+      const res = await fetch("/api/bookings/create-order", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(bookingDetails),
+      });
+
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || "Failed to create order");
+      }
+
+      const order = await res.json();
+
+      const options = {
+        key: order.keyId,
+        amount: order.amount,
+        currency: order.currency,
+        name: "Trifinity Tutors",
+        description: `Session with ${order.tutorName}`,
+        order_id: order.orderId,
+        handler: function () {
+          localStorage.removeItem("bookingDetails");
+          navigate("/student-dashboard?tab=bookings");
+        },
+        prefill: {
+          name: JSON.parse(localStorage.getItem("user") || "{}").name,
+          email: JSON.parse(localStorage.getItem("user") || "{}").email,
+        },
+        theme: { color: "#6366f1" },
+        modal: {
+          ondismiss: () => setLoading(false),
+        },
+      };
+
+      const rzp = new window.Razorpay(options);
+
+      rzp.on("payment.failed", (response) => {
+        alert(`Payment failed: ${response.error.description}`);
+        setLoading(false);
+      });
+
+      rzp.open();
+
     } catch (error) {
       console.error("Payment error:", error);
-      alert("Payment failed. Please try again.");
-    } finally {
+      alert(error.message || "Payment failed. Please try again.");
       setLoading(false);
     }
   };
@@ -83,159 +108,38 @@ function Checkout() {
         </button>
 
         <div className="grid gap-8 lg:grid-cols-3">
-          {/* Payment Form */}
+          {/* Payment section */}
           <div className="lg:col-span-2">
             <h1 className="mb-8 text-3xl font-bold text-gray-900">Checkout</h1>
 
             <Card className="border border-gray-200 p-6 mb-6">
-              <div className="flex gap-3 mb-6">
-                <button
-                  onClick={() => setPaymentMethod("card")}
-                  className={`px-4 py-2 rounded-lg border transition ${
-                    paymentMethod === "card"
-                      ? "border-blue-600 bg-blue-50 text-blue-600 font-medium"
-                      : "border-gray-200 text-gray-700 hover:border-gray-300"
-                  }`}
+              {/* Razorpay handles Card / UPI / Netbanking inside its own modal */}
+              <div className="flex flex-col items-center gap-4 py-4 text-center">
+                <Lock className="h-8 w-8 text-blue-600" />
+                <p className="text-gray-700 font-medium">
+                  Pay securely with Card, UPI, or Netbanking
+                </p>
+                <p className="text-sm text-gray-500">
+                  You'll be taken to Razorpay's secure payment screen
+                </p>
+
+                <Button
+                  onClick={handlePayment}
+                  disabled={loading}
+                  className="mt-2 w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-full font-semibold flex items-center justify-center gap-2"
                 >
-                  Card
-                </button>
-                <button
-                  onClick={() => setPaymentMethod("upi")}
-                  className={`px-4 py-2 rounded-lg border transition ${
-                    paymentMethod === "upi"
-                      ? "border-blue-600 bg-blue-50 text-blue-600 font-medium"
-                      : "border-gray-200 text-gray-700 hover:border-gray-300"
-                  }`}
-                >
-                  UPI
-                </button>
-                <button
-                  onClick={() => setPaymentMethod("netbanking")}
-                  className={`px-4 py-2 rounded-lg border transition ${
-                    paymentMethod === "netbanking"
-                      ? "border-blue-600 bg-blue-50 text-blue-600 font-medium"
-                      : "border-gray-200 text-gray-700 hover:border-gray-300"
-                  }`}
-                >
-                  Netbanking
-                </button>
+                  <Lock className="h-4 w-4" />
+                  {loading ? "Opening payment..." : `Pay ₹${bookingDetails.total.toFixed(0)}`}
+                </Button>
+
+                <p className="text-xs text-gray-500">
+                  Secured by Razorpay · 256-bit encryption
+                </p>
               </div>
-
-              {paymentMethod === "card" && (
-                <form onSubmit={handlePayment} className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-900 mb-2">Card number</label>
-                    <Input
-                      type="text"
-                      name="cardNumber"
-                      value={formData.cardNumber}
-                      onChange={handleInputChange}
-                      placeholder="4242 4242 4242 4242"
-                      className="block w-full rounded-lg border border-gray-300 px-4 py-2 text-gray-900"
-                      required
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-900 mb-2">Name on card</label>
-                    <Input
-                      type="text"
-                      name="cardName"
-                      value={formData.cardName}
-                      onChange={handleInputChange}
-                      placeholder="John Doe"
-                      className="block w-full rounded-lg border border-gray-300 px-4 py-2 text-gray-900"
-                      required
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-900 mb-2">Expiry</label>
-                      <Input
-                        type="text"
-                        name="expiry"
-                        value={formData.expiry}
-                        onChange={handleInputChange}
-                        placeholder="MM/YY"
-                        className="block w-full rounded-lg border border-gray-300 px-4 py-2 text-gray-900"
-                        required
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-900 mb-2">CVC</label>
-                      <Input
-                        type="text"
-                        name="cvc"
-                        value={formData.cvc}
-                        onChange={handleInputChange}
-                        placeholder="123"
-                        className="block w-full rounded-lg border border-gray-300 px-4 py-2 text-gray-900"
-                        required
-                      />
-                    </div>
-                  </div>
-
-                  <Button
-                    type="submit"
-                    disabled={loading}
-                    className="mt-6 w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-full font-semibold flex items-center justify-center gap-2"
-                  >
-                    <Lock className="h-4 w-4" />
-                    {loading ? "Processing..." : `Pay ₹${bookingDetails.total.toFixed(0)}`}
-                  </Button>
-
-                  <p className="text-xs text-gray-500 text-center mt-3">
-                    Secured by 256-bit encryption · This is a demo
-                  </p>
-                </form>
-              )}
-
-              {paymentMethod === "upi" && (
-                <form onSubmit={handlePayment} className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-900 mb-2">UPI ID</label>
-                    <Input
-                      type="text"
-                      placeholder="yourname@upi"
-                      className="block w-full rounded-lg border border-gray-300 px-4 py-2 text-gray-900"
-                      required
-                    />
-                  </div>
-                  <Button
-                    type="submit"
-                    disabled={loading}
-                    className="mt-6 w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-full font-semibold"
-                  >
-                    {loading ? "Processing..." : `Pay ₹${bookingDetails.total.toFixed(0)}`}
-                  </Button>
-                </form>
-              )}
-
-              {paymentMethod === "netbanking" && (
-                <form onSubmit={handlePayment} className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-900 mb-2">Select Bank</label>
-                    <select className="block w-full rounded-lg border border-gray-300 px-4 py-2 text-gray-900">
-                      <option>HDFC Bank</option>
-                      <option>ICICI Bank</option>
-                      <option>SBI Bank</option>
-                      <option>Axis Bank</option>
-                    </select>
-                  </div>
-                  <Button
-                    type="submit"
-                    disabled={loading}
-                    className="mt-6 w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-full font-semibold"
-                  >
-                    {loading ? "Processing..." : `Pay ₹${bookingDetails.total.toFixed(0)}`}
-                  </Button>
-                </form>
-              )}
             </Card>
           </div>
 
-          {/* Order Summary */}
+          {/* Order Summary — unchanged */}
           <div className="lg:col-span-1">
             <Card className="sticky top-6 border border-gray-200 p-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Summary</h3>
@@ -247,14 +151,18 @@ function Checkout() {
                 </div>
                 <div>
                   <p className="text-sm text-gray-600">When</p>
-                  <p className="font-semibold text-gray-900">{formattedDate} · {bookingDetails.time}</p>
+                  <p className="font-semibold text-gray-900">
+                    {formattedDate} · {bookingDetails.time}
+                  </p>
                 </div>
               </div>
 
               <div className="mt-4 space-y-3">
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-600">Subtotal</span>
-                  <span className="font-semibold text-gray-900">₹{bookingDetails.subtotal?.toFixed(0) || (bookingDetails.rate * bookingDetails.duration).toFixed(0)}</span>
+                  <span className="font-semibold text-gray-900">
+                    ₹{bookingDetails.subtotal?.toFixed(0) || (bookingDetails.rate * bookingDetails.duration).toFixed(0)}
+                  </span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-600">Platform fee</span>
@@ -264,7 +172,9 @@ function Checkout() {
 
               <div className="mt-4 flex justify-between border-t border-gray-200 pt-4">
                 <span className="font-semibold text-gray-900">Total</span>
-                <span className="text-2xl font-bold text-gray-900">₹{bookingDetails.total.toFixed(0)}</span>
+                <span className="text-2xl font-bold text-gray-900">
+                  ₹{bookingDetails.total.toFixed(0)}
+                </span>
               </div>
             </Card>
           </div>

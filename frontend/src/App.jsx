@@ -31,6 +31,8 @@ import CompleteProfile from "./pages/CompleteProfile";
 import ProtectedRoute from "./components/ProtectedRoute";
 import PublicRoute from "./components/PublicRoute";
 
+import StudentBookings from "./pages/StudentBookings";
+
 
 function App() {
   return (
@@ -89,6 +91,15 @@ function App() {
           <MainLayout>
             <ProtectedRoute>
               <StudentDashboard />
+            </ProtectedRoute>
+          </MainLayout>
+        } />
+
+
+        <Route path="/dashboard/student/bookings" element={
+          <MainLayout>
+            <ProtectedRoute>
+              <StudentBookings />
             </ProtectedRoute>
           </MainLayout>
         } />
@@ -194,6 +205,9 @@ function App() {
             </ProtectedRoute>
           </MainLayout>
         } />
+
+       
+         
 
       </Routes>
     </BrowserRouter>
