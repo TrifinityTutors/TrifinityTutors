@@ -13,7 +13,7 @@ const nav = [
   { to: "/dashboard/student", label: "Overview", icon: LayoutDashboard },
   { to: "/tutors", label: "Find Tutors", icon: Search },
   { to: "/dashboard/student", label: "Saved Tutors", icon: Heart },
-  { to: "/dashboard/student", label: "Bookings", icon: Calendar },
+  { to: "/dashboard/student/bookings", label: "Bookings", icon: Calendar },
   { to: "/dashboard/student", label: "Messages", icon: MessageCircle },
   { to: "/dashboard/student", label: "Notifications", icon: Bell },
   { to: "/dashboard/student", label: "Settings", icon: Settings },

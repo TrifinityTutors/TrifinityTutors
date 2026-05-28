@@ -11,7 +11,7 @@ const nav = [
   { to: "/dashboard/student", label: "Overview", icon: LayoutDashboard },
   { to: "/tutors", label: "Find Tutors", icon: Search },
   { to: "/dashboard/student", label: "Saved Tutors", icon: Heart },
-  { to: "/dashboard/student", label: "Bookings", icon: Calendar },
+  { to: "/dashboard/student/bookings", label: "Bookings", icon: Calendar },
   { to: "/dashboard/student", label: "Messages", icon: MessageCircle },
   { to: "/dashboard/student", label: "Notifications", icon: Bell },
   { to: "/dashboard/student", label: "Settings", icon: Settings },
@@ -45,7 +45,9 @@ function StudentDashboard() {
         <Card className="lg:col-span-2 p-6 border-border/60">
           <div className="flex items-center justify-between mb-5">
             <h2 className="font-display font-semibold">Recent bookings</h2>
-            <Button variant="ghost" size="sm">View all</Button>
+            <Button variant="ghost" size="sm" onClick={() => navigate("/dashboard/student/bookings")}>
+              View all
+            </Button>
           </div>
           <div className="space-y-3">
             {[
