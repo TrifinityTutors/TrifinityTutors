@@ -1,5 +1,6 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
+import { useAuth } from "@/lib/auth";
 import { LayoutDashboard, Search, Heart, Calendar, Bell, MessageCircle, Settings, BookOpen, Star, Clock } from "lucide-react";
 import { DashboardShell, StatCard } from "@/components/DashboardShell";
 import { Card } from "@/components/ui/card";
@@ -18,21 +19,16 @@ const nav = [
 
 function StudentDashboard() {
   const navigate = useNavigate();
-  const [user, setUser] = useState(null);
+  const { user } = useAuth();
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    const studentData = localStorage.getItem("student");
-
-    if (!token && !studentData) {
-      navigate("/auth/login");
-      return;
+    if (!user) {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        navigate("/auth/login");
+      }
     }
-
-    if (studentData) {
-      setUser(JSON.parse(studentData));
-    }
-  }, [navigate]);
+  }, [user, navigate]);
 
   const userName = user?.name || "Student";
 

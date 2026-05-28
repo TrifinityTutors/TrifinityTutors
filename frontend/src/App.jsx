@@ -17,8 +17,13 @@ import AdminRoute from "./admin/components/AdminRoute";
 import TutorLogin from "./pages/TutorLogin"
 import MyApplications from "./pages/MyApplications"
 import TutorProfile from "./pages/TutorProfile"
+import StudentProfile from "./pages/StudentProfile"
+import EditProfile from "./pages/EditProfile"
 import TutorSchedule from "./pages/TutorSchedule"
-import Navbar from "./components/Navbar"
+import TutorDetails from "./pages/TutorDetails"
+import MessagePage from "./pages/MessagePage"
+import BookingSession from "./pages/BookingSession"
+import Checkout from "./pages/Checkout"
 import MainLayout from "./layouts/MainLayout"
 
 import CompleteProfile from "./pages/CompleteProfile";
@@ -36,9 +41,11 @@ function App() {
         {/* USER ROUTES WITH LAYOUT */}
 
         <Route path="/" element={
-          <PublicRoute>
-            <LandingPage />
-          </PublicRoute>
+          <MainLayout>
+            <PublicRoute>
+              <LandingPage />
+            </PublicRoute>
+          </MainLayout>
         } />
 
         <Route path="/auth" element={
@@ -55,11 +62,15 @@ function App() {
         } />
 
         <Route path="/register-tutor" element={
-          <RegisterTutor />
+          <MainLayout>
+            <RegisterTutor />
+          </MainLayout>
         } />
 
         <Route path="/tutor-register" element={
-          <RegisterTutor />
+          <MainLayout>
+            <RegisterTutor />
+          </MainLayout>
         } />
 
         <Route path="/dashboard" element={
@@ -75,15 +86,19 @@ function App() {
         } />
 
         <Route path="/student-dashboard" element={
-          <ProtectedRoute>
-            <StudentDashboard />
-          </ProtectedRoute>
+          <MainLayout>
+            <ProtectedRoute>
+              <StudentDashboard />
+            </ProtectedRoute>
+          </MainLayout>
         } />
 
         <Route path="/dashboard/student" element={
-          <ProtectedRoute>
-            <StudentDashboard />
-          </ProtectedRoute>
+          <MainLayout>
+            <ProtectedRoute>
+              <StudentDashboard />
+            </ProtectedRoute>
+          </MainLayout>
         } />
 
         <Route path="/dashboard/tutor" element={
@@ -93,9 +108,11 @@ function App() {
         } />
 
         <Route path="/tutor/schedule" element={
-          <ProtectedRoute>
-            <TutorSchedule />
-          </ProtectedRoute>
+          <MainLayout>
+            <ProtectedRoute>
+              <TutorSchedule />
+            </ProtectedRoute>
+          </MainLayout>
         } />
 
         <Route path="/my-applications" element={
@@ -105,7 +122,35 @@ function App() {
         } />
 
         <Route path="/tutors" element={
-          <Tutors />
+          <MainLayout>
+            <Tutors />
+          </MainLayout>
+        } />
+        <Route path="/tutors/:id" element={
+          <MainLayout>
+            <TutorDetails />
+          </MainLayout>
+        } />
+        <Route path="/messages/:id" element={
+          <MainLayout>
+            <ProtectedRoute>
+              <MessagePage />
+            </ProtectedRoute>
+          </MainLayout>
+        } />
+        <Route path="/booking/:id" element={
+          <MainLayout>
+            <ProtectedRoute>
+              <BookingSession />
+            </ProtectedRoute>
+          </MainLayout>
+        } />
+        <Route path="/checkout" element={
+          <MainLayout>
+            <ProtectedRoute>
+              <Checkout />
+            </ProtectedRoute>
+          </MainLayout>
         } />
 
         {/* LOGIN (NO NAVBAR) */}
@@ -129,9 +174,23 @@ function App() {
         } />
 
         <Route path="/tutor-profile" element={
+          <ProtectedRoute>
+            <TutorProfile />
+          </ProtectedRoute>
+        } />
+
+        <Route path="/student/profile" element={
           <MainLayout>
             <ProtectedRoute>
-              <TutorProfile />
+              <StudentProfile />
+            </ProtectedRoute>
+          </MainLayout>
+        } />
+
+        <Route path="/student/edit-profile" element={
+          <MainLayout>
+            <ProtectedRoute>
+              <EditProfile />
             </ProtectedRoute>
           </MainLayout>
         } />

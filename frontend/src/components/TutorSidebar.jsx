@@ -1,5 +1,6 @@
 import { useState } from "react"
 import { Link, useLocation, useNavigate } from "react-router-dom"
+import { useAuth } from "@/lib/auth"
 import { ProfileDropdown } from "@/components/ProfileDropdown"
 import "./TutorSidebar.css"
 
@@ -7,8 +8,9 @@ function TutorSidebar({ navItems = [] }) {
   const location = useLocation()
   const navigate = useNavigate()
   const [isCollapsed, setIsCollapsed] = useState(false)
+  const { user, logout } = useAuth()
 
-  const tutorData = (() => {
+  const tutorData = user?.role === "tutor" ? user : (() => {
     try {
       return JSON.parse(localStorage.getItem("tutor")) || {};
     } catch {
@@ -20,6 +22,11 @@ function TutorSidebar({ navItems = [] }) {
   const tutorImage = tutorData?.profilePhoto || tutorData?.photo || ""
 
   const handleLogout = () => {
+    if (logout) {
+      logout()
+      return
+    }
+
     localStorage.removeItem("token")
     localStorage.removeItem("tutor")
     navigate("/")
@@ -78,7 +85,7 @@ function TutorSidebar({ navItems = [] }) {
       <div className="sidebar-footer">
         <div className="user-info">
           <div className="user-avatar" style={{ height: "36px", width: "36px" }}>
-            <ProfileDropdown tutorData={tutorData} onLogout={handleLogout} />
+            <ProfileDropdown userData={tutorData} onLogout={handleLogout} />
           </div>
           {!isCollapsed && (
             <div className="user-details">

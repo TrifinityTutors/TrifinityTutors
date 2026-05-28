@@ -1,25 +1,32 @@
-import { Navigate } from "react-router-dom";
+import { Navigate, useLocation } from "react-router-dom";
+import { getStoredAuth, useAuth, dashboardPathFor } from "@/lib/auth";
 
 function ProtectedRoute({ children }) {
-  const token = localStorage.getItem("token");
-  const student = localStorage.getItem("student");
-  const tutorStr = localStorage.getItem("tutor");
+  const auth = useAuth();
+  const location = useLocation();
+  const stored = getStoredAuth();
+  const token = auth?.token || stored.token;
+  const user = auth?.user || stored.user;
 
-  // If nothing indicates an authenticated user, send to home
-  if (!token && !student && !tutorStr) {
-    return <Navigate to="/" />;
+  if (!token || !user) {
+    return <Navigate to="/auth/login" replace />;
   }
 
-  // If tutor exists but profile is not complete, redirect to registration
-  if (tutorStr) {
-    try {
-      const tutor = JSON.parse(tutorStr);
-      const isComplete = tutor.isProfileComplete ?? tutor.profileComplete ?? Boolean(tutor.status);
-      if (!isComplete) {
-        return <Navigate to="/register-tutor" replace />;
-      }
-    } catch (e) {
-      // ignore parse errors and allow access if token exists
+  const tutorOnlyPaths = ["/tutor-dashboard", "/dashboard/tutor"];
+  const studentOnlyPaths = ["/student-dashboard", "/dashboard/student"];
+
+  if (user.role === "tutor" && studentOnlyPaths.includes(location.pathname)) {
+    return <Navigate to={dashboardPathFor("tutor")} replace />;
+  }
+
+  if (user.role === "student" && tutorOnlyPaths.includes(location.pathname)) {
+    return <Navigate to={dashboardPathFor("student")} replace />;
+  }
+
+  if (user.role === "tutor") {
+    const isComplete = user.profileComplete ?? user.isProfileComplete ?? Boolean(user.status);
+    if (!isComplete) {
+      return <Navigate to="/register-tutor" replace />;
     }
   }
 

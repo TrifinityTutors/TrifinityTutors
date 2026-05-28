@@ -2,9 +2,11 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { GoogleLogin } from "@react-oauth/google";
 import { fetchTutorProfile } from "@/lib/auth-helpers";
+import { useAuth } from "@/lib/auth";
 import "./TutorLogin.css"
 
 function TutorLogin() {
+  const { setSession } = useAuth();
 
   const [form, setForm] = useState({
     email: "",
@@ -34,22 +36,27 @@ function TutorLogin() {
       const data = await res.json();
 
       if (data.message === "Login successful") {
-        localStorage.setItem("token", data.token);
-        localStorage.setItem("tutor", JSON.stringify(data.user));
+        const authUser = {
+          _id: data.user?._id || data.user?.id,
+          id: data.user?.id || data.user?._id,
+          name: data.user?.name || "",
+          email: data.user?.email || "",
+          role: "tutor",
+          profileComplete: data.user?.profileComplete ?? data.user?.isProfileComplete ?? false,
+          status: data.user?.status || "pending",
+        };
+
+        setSession(data.token, authUser);
 
         console.log("✅ Email/Password login successful for:", data.user?.email);
         console.log("📝 Tutor data:", { 
-          name: data.user?.name, 
-          profileComplete: data.user?.profileComplete,
-          subject: data.user?.subject
+          name: authUser.name, 
+          profileComplete: authUser.profileComplete,
+          status: authUser.status
         });
 
-        // Check if new tutor (profile not complete)
-        // Verify the tutor profile before redirecting.
-        // This ensures existing tutors with saved profiles go to the dashboard,
-        // even if the returned user object does not include profileComplete.
         console.log("🔎 Verifying tutor profile after login...");
-        await redirectAfterAuth(data.user, data.token);
+        await redirectAfterAuth(authUser, data.token);
       } else {
         alert(data.message || "Login failed. Please try again.");
       }
@@ -88,19 +95,22 @@ function TutorLogin() {
         return;
       }
 
-      // Store token and basic tutor info immediately
-      localStorage.setItem("token", data.token);
-      localStorage.setItem(
-        "tutor",
-        JSON.stringify({
-          ...data.user,
-          profileComplete: Boolean(data.isProfileComplete),
-          status: data.status || null,
-        })
-      );
+      const authUser = {
+        _id: data.user?._id || data.user?.id,
+        id: data.user?.id || data.user?._id,
+        name: data.user?.name || "",
+        email: data.user?.email || "",
+        photo: data.user?.photo || "",
+        googleId: data.user?.googleId || "",
+        role: "tutor",
+        profileComplete: Boolean(data.isProfileComplete),
+        status: data.status || null,
+      };
+
+      setSession(data.token, authUser);
 
       console.log("🔎 Verifying tutor profile after Google login...");
-      await redirectAfterAuth(data.user, data.token);
+      await redirectAfterAuth(authUser, data.token);
     } catch (err) {
       console.error("❌ Google login error:", err);
       alert("Google login failed. Please try again.");
@@ -119,13 +129,15 @@ function TutorLogin() {
         return;
       }
 
-      // Update localStorage with complete profile
-      localStorage.setItem('tutor', JSON.stringify({
+      // Update auth session with complete profile
+      const mergedTutor = {
         ...user,
         ...profile,
+        role: "tutor",
         profileComplete: true,
-        status: profile.status || null
-      }));
+        status: profile.status || null,
+      };
+      setSession(jwtToken, mergedTutor);
 
       // Check if account was rejected
       if (profile.status === 'rejected') {

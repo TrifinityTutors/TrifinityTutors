@@ -1,11 +1,12 @@
 /* eslint-disable react-refresh/only-export-components */
 import { createFileRoute } from "@tanstack/react-router";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { GoogleLogin } from "@react-oauth/google";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useAuth } from "@/lib/auth";
 
 export const Route = createFileRoute("/auth/login")({
   component: LoginPage,
@@ -13,8 +14,11 @@ export const Route = createFileRoute("/auth/login")({
 
 function LoginPage() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const { setSession } = useAuth();
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
+  const from = location.state?.from || "/student-dashboard";
 
   const handleGoogleLogin = async (credentialResponse) => {
     setErrors({});
@@ -36,14 +40,18 @@ function LoginPage() {
         throw new Error(data.message || "Google login failed. Please try again.");
       }
 
-      localStorage.setItem("token", data.token || `google-${Date.now()}`);
-      localStorage.setItem("user", JSON.stringify({
+      const authUser = {
+        _id: data.user?._id || data.user?.id,
+        id: data.user?.id || data.user?._id,
         name: data.user?.name || "",
         email: data.user?.email || "",
         role: "student",
         googleId: data.user?.googleId || "",
-      }));
-      navigate("/student-dashboard");
+        photo: data.user?.photo || "",
+      };
+
+      setSession(data.token, authUser);
+      navigate(from);
     } catch (error) {
       setErrors({ submit: error.message || "Google login failed. Please try again." });
     } finally {
@@ -93,7 +101,7 @@ function LoginPage() {
           <Input name="password" autoComplete="current-password" className="mt-2 h-11" placeholder="••••••••" type="password" />
         </div>
         <Button asChild className="w-full h-11 bg-gradient-primary shadow-glow">
-          <Link to="/dashboard/student">Log in</Link>
+          <Link to={from}>Log in</Link>
         </Button>
       </form>
     </div>
