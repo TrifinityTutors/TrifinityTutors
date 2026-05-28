@@ -67,7 +67,7 @@ function Tutors() {
   const [location, setLocation] = useState("");
   const [selectedSubjects, setSelectedSubjects] = useState([]);
   const [selectedRatings, setSelectedRatings] = useState([]);
-  const [maxPrice, setMaxPrice] = useState(100);
+  const [maxPrice, setMaxPrice] = useState(10000);
   const [tutors, setTutors] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -100,6 +100,8 @@ function Tutors() {
         const response = await fetch("http://localhost:5000/api/tutors");
         const data = await response.json();
 
+        console.log("Fetched tutors:", data);
+
         if (!response.ok) {
           throw new Error(data.message || "Unable to fetch tutors");
         }
@@ -111,11 +113,12 @@ function Tutors() {
             name: t.name || t.fullName || "Tutor",
             subject: t.subject || (t.subjects?.[0] || "Tutor"),
             tags: t.subjects?.slice(0, 3) || [t.subject || "Tutoring"],
-            rating: (typeof t.rating === "number" ? t.rating.toFixed(2) : t.rating) || "4.95",
+            rating: typeof t.rating === "number" ? t.rating.toFixed(2) : t.rating || "4.95",
             reviews: t.reviews || 0,
             price: t.hourlyRate || t.price || 0,
             exp: t.experience || 0,
             location: t.locality || t.city || t.location || "Remote",
+            profilePhoto: t.profilePhoto || t.photo || "/default-avatar.svg",
             grad: gradients[index % gradients.length],
           }))
         );
@@ -170,7 +173,7 @@ function Tutors() {
     setLocation("");
     setSelectedSubjects([]);
     setSelectedRatings([]);
-    setMaxPrice(100);
+    setMaxPrice(10000);
     setSearchParams({});
   };
 
@@ -280,7 +283,7 @@ function Tutors() {
                 <input
                   type="range"
                   min="5"
-                  max="100"
+                  max="10000"
                   value={maxPrice}
                   onChange={(e) => setMaxPrice(parseInt(e.target.value, 10))}
                   className="mt-4 w-full"
@@ -384,13 +387,16 @@ function TutorCard({ t, isSaved, onToggleFavorite, isSaving }) {
       </button>
       <div className="flex items-center gap-4">
         <div className="relative h-16 w-16 rounded-2xl overflow-hidden bg-slate-200 shadow-sm">
-          {t.profilePhoto ? (
-            <img src={t.profilePhoto} alt={t.name} className="h-full w-full object-cover" />
-          ) : (
-            <div className={`h-full w-full grid place-items-center text-white font-bold text-xl bg-gradient-to-br ${t.grad}`}>
-              {t.name?.split(" ").map((word) => word[0]).join("")}
-            </div>
-          )}
+          <img
+            src={t.profilePhoto || t.photo || "/default-avatar.svg"}
+            alt={t.name}
+            onError={(event) => {
+              if (!event.currentTarget.src.endsWith("/default-avatar.svg")) {
+                event.currentTarget.src = "/default-avatar.svg";
+              }
+            }}
+            className="h-full w-full object-cover"
+          />
           <span className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full bg-emerald-500 ring-2 ring-white" />
         </div>
         <div className="flex-1 min-w-0">

@@ -1,9 +1,11 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
+import axios from "axios";
 import { Star, MapPin, Calendar, MessageCircle, Award, Clock, GraduationCap, Languages, CheckCircle2, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { getTutorById } from "@/data/tutors";
+import { SiteLayout } from "@/components/SiteLayout";
 
 export const Route = createFileRoute("/tutors/$id")({
   component: TutorProfilePage,
@@ -11,27 +13,50 @@ export const Route = createFileRoute("/tutors/$id")({
 
 function TutorProfilePage() {
   const { id } = Route.useParams();
-  const tutor = getTutorById(id);
+  const [tutor, setTutor] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        const res = await axios.get(`/api/tutors/profile/${id}`);
+        if (!mounted) return;
+        setTutor(res.data);
+      } catch (err) {
+        console.error("Failed to fetch tutor profile", err);
+        if (!mounted) return;
+        setTutor(null);
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    })();
+    return () => { mounted = false; };
+  }, [id]);
+
+  if (loading) {
+    return (
+      <div className="mx-auto max-w-4xl px-4 py-20 text-center sm:px-6">Loading tutor…</div>
+    );
+  }
 
   if (!tutor) {
     return (
-      <>
-        <div className="mx-auto max-w-4xl px-4 py-20 text-center sm:px-6">
-          <p className="text-xl font-semibold text-foreground">Tutor not found</p>
-          <p className="mt-3 text-muted-foreground">The requested tutor profile does not exist.</p>
-          <Link
-            to="/tutors"
-            className="mt-6 inline-flex rounded-full border border-border bg-card px-5 py-3 text-sm font-semibold text-foreground transition hover:bg-primary/5"
-          >
-            Back to tutors
-          </Link>
-        </div>
-      </>
+      <div className="mx-auto max-w-4xl px-4 py-20 text-center sm:px-6">
+        <p className="text-xl font-semibold text-foreground">Tutor not found</p>
+        <p className="mt-3 text-muted-foreground">The requested tutor profile does not exist.</p>
+        <Link
+          to="/tutors"
+          className="mt-6 inline-flex rounded-full border border-border bg-card px-5 py-3 text-sm font-semibold text-foreground transition hover:bg-primary/5"
+        >
+          Back to tutors
+        </Link>
+      </div>
     );
   }
 
   return (
-    <>
+    <SiteLayout>
       <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
         <Link to="/tutors" className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground">
           <ArrowLeft className="h-4 w-4" /> Back to tutors

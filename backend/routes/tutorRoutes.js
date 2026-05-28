@@ -16,10 +16,14 @@ const path = require("path");
 // GET all tutors (public listing)
 router.get("/", async (req, res) => {
   try {
+    console.log("GET /api/tutors called", { query: req.query });
     const filter = { profileComplete: true };
     const tutors = await Tutor.find(filter)
-      .select("name email subject subjects locality experience hourlyRate trialRate bio profilePhoto rating reviews tags status profileComplete")
+      .select("name email subject subjects locality experience hourlyRate trialRate bio profilePhoto rating reviews tags status profileComplete photo")
       .sort({ createdAt: -1 });
+
+    console.log("All tutors from DB:", tutors);
+    console.log(`GET /api/tutors -> found ${tutors.length} tutors`, tutors.map(t => ({ id: t._id, email: t.email, hourlyRate: t.hourlyRate, profileComplete: t.profileComplete, status: t.status })));
 
     res.json(tutors);
   } catch (err) {

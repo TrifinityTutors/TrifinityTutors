@@ -1,11 +1,13 @@
 import { Link, useNavigate } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { io as ioClient } from "socket.io-client";
 import { useAuth } from "@/lib/auth";
 import { LayoutDashboard, Search, Heart, Calendar, Bell, MessageCircle, Settings, BookOpen, Star, Clock } from "lucide-react";
 import { DashboardShell, StatCard } from "@/components/DashboardShell";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import SessionCalendar from "@/components/SessionCalendar";
 
 const nav = [
   { to: "/dashboard/student", label: "Overview", icon: LayoutDashboard },
@@ -21,6 +23,38 @@ function StudentDashboard() {
   const navigate = useNavigate();
   const { user, token } = useAuth();
   const [savedTutors, setSavedTutors] = useState([]);
+  const [bookings, setBookings] = useState([]);
+  const [bookingError, setBookingError] = useState(null);
+  const [bookingLoading, setBookingLoading] = useState(true);
+  const socketRef = useRef(null);
+
+  const loadBookings = useCallback(async () => {
+    const authToken = token || localStorage.getItem("token");
+    if (!authToken) {
+      setBookingError("Missing authorization token");
+      setBookingLoading(false);
+      return;
+    }
+
+    try {
+      setBookingLoading(true);
+      const res = await fetch("/api/bookings/student", {
+        headers: { Authorization: `Bearer ${authToken}` },
+      });
+      if (!res.ok) {
+        const payload = await res.json().catch(() => ({}));
+        throw new Error(payload.error || "Unable to load bookings");
+      }
+      const data = await res.json();
+      setBookings(Array.isArray(data) ? data : []);
+      setBookingError(null);
+    } catch (err) {
+      setBookingError(err.message || "Failed to load bookings");
+      setBookings([]);
+    } finally {
+      setBookingLoading(false);
+    }
+  }, [token]);
 
   useEffect(() => {
     if (!user) {
@@ -72,6 +106,36 @@ function StudentDashboard() {
     loadSavedTutors();
   }, [user, token]);
 
+  useEffect(() => {
+    loadBookings();
+  }, [loadBookings]);
+
+  useEffect(() => {
+    const endpoint = import.meta.env.DEV ? "http://localhost:5000" : window.location.origin;
+    const socket = ioClient(endpoint, { transports: ["websocket"] });
+    socketRef.current = socket;
+
+    const userObj = JSON.parse(localStorage.getItem("user") || "{}") || {};
+    const userId = userObj._id || userObj.id || userObj.userId;
+    if (userId) {
+      socket.on("connect", () => socket.emit("join", userId.toString()));
+    }
+
+    const refreshBookings = () => loadBookings();
+    socket.on("new_booking", refreshBookings);
+    socket.on("booking_updated", refreshBookings);
+    socket.on("booking_confirmed", refreshBookings);
+    socket.on("notification", refreshBookings);
+
+    return () => {
+      socket.off("new_booking", refreshBookings);
+      socket.off("booking_updated", refreshBookings);
+      socket.off("booking_confirmed", refreshBookings);
+      socket.off("notification", refreshBookings);
+      socket.disconnect();
+    };
+  }, [loadBookings]);
+
   const userName = user?.name || "Student";
 
   return (
@@ -81,6 +145,28 @@ function StudentDashboard() {
         <StatCard label="Saved tutors" value={String(savedTutors.length)} icon={Heart} accent="success" />
         <StatCard label="Hours learned" value="48" delta="+6 this month" icon={Clock} accent="warning" />
         <StatCard label="Average rating" value="4.9" icon={Star} />
+      </div>
+
+      <div className="mt-8">
+        <Card className="p-6 border-border/60">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-6">
+            <div>
+              <p className="text-sm font-medium text-slate-500 uppercase tracking-[0.18em]">Session Calendar</p>
+              <h2 className="mt-2 text-2xl font-semibold text-slate-900">All your bookings, updated live.</h2>
+            </div>
+            <div className="flex items-center gap-2">
+              <Button variant="outline" size="sm" onClick={loadBookings}>Refresh</Button>
+            </div>
+          </div>
+          {bookingLoading ? (
+            <div className="rounded-3xl border border-dashed border-slate-200 p-10 text-center text-sm text-slate-500">Loading sessions…</div>
+          ) : (
+            <SessionCalendar bookings={bookings} role="Student" />
+          )}
+          {bookingError && (
+            <div className="mt-4 rounded-3xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700">{bookingError}</div>
+          )}
+        </Card>
       </div>
 
       <div className="mt-8 grid gap-6 lg:grid-cols-3">

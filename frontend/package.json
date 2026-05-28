@@ -20,6 +20,7 @@
     "@tanstack/react-router": "^1.170.8",
     "autoprefixer": "^10.4.27",
     "axios": "^1.13.6",
+    "socket.io-client": "^4.7.2",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "lucide-react": "^1.16.0",

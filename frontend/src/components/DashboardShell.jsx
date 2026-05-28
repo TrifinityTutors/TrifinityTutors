@@ -1,7 +1,9 @@
-import React from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { useLocation, Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/lib/auth";
 import { GraduationCap, Bell, Search } from "lucide-react";
+import { io as ioClient } from "socket.io-client";
+import { Toaster, toast } from 'sonner';
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { ProfileDropdown } from "@/components/ProfileDropdown";
@@ -11,6 +13,9 @@ export function DashboardShell({ children, navItems, title, role }) {
   const navigate = useNavigate();
 
   const { user, logout } = useAuth();
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [notifications, setNotifications] = useState([]);
+  const [showNotifications, setShowNotifications] = useState(false);
   const currentUser = user || React.useMemo(() => {
     try {
       return JSON.parse(localStorage.getItem("user")) || JSON.parse(localStorage.getItem("student")) || JSON.parse(localStorage.getItem("tutor")) || {};
@@ -31,8 +36,113 @@ export function DashboardShell({ children, navItems, title, role }) {
     logout();
   };
 
+  useEffect(() => {
+    (async () => {
+      try {
+        const token = localStorage.getItem('token');
+        if (!token) return;
+        const res = await fetch('/api/notifications', { headers: { Authorization: `Bearer ${token}` } });
+        if (!res.ok) return;
+        const data = await res.json();
+        setUnreadCount(data.unreadCount || 0);
+      } catch (e) {
+        // ignore
+      }
+    })();
+  }, []);
+
+  // Socket.IO for real-time notifications
+  const socketRef = useRef(null);
+  useEffect(() => {
+    const initSocket = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        if (!token) return;
+
+        const endpoint = import.meta.env.DEV ? 'http://localhost:5000' : window.location.origin;
+        socketRef.current = ioClient(endpoint, { transports: ['websocket'] });
+
+        const userId = currentUser?._id || currentUser?.id || currentUser?.userId;
+        if (userId) {
+          socketRef.current.on('connect', () => {
+            socketRef.current.emit('join', userId);
+          });
+        }
+
+        socketRef.current.on('booking_confirmed', async (payload) => {
+          try {
+            toast(`${payload?.tutorName || 'Tutor'}: booking confirmed for ${payload?.date || ''} ${payload?.time || ''}`);
+          } catch (e) {}
+          setUnreadCount((c) => (typeof c === 'number' ? c + 1 : 1));
+          try {
+            const token = localStorage.getItem('token');
+            if (!token) return;
+            const res = await fetch('/api/notifications', { headers: { Authorization: `Bearer ${token}` } });
+            if (!res.ok) return;
+            const data = await res.json();
+            setNotifications(data.notifications || []);
+            setUnreadCount(data.unreadCount || 0);
+          } catch (e) {}
+        });
+
+        socketRef.current.on('new_booking', async (payload) => {
+          try {
+            toast(`New booking: ${payload?.studentName || payload?.tutorName || 'Booking'} on ${payload?.date || ''} ${payload?.time || ''}`);
+          } catch (e) {}
+          setUnreadCount((c) => (typeof c === 'number' ? c + 1 : 1));
+          try {
+            const token = localStorage.getItem('token');
+            if (!token) return;
+            const res = await fetch('/api/notifications', { headers: { Authorization: `Bearer ${token}` } });
+            if (!res.ok) return;
+            const data = await res.json();
+            setNotifications(data.notifications || []);
+            setUnreadCount(data.unreadCount || 0);
+          } catch (e) {}
+        });
+
+        socketRef.current.on('booking_updated', async (payload) => {
+          try {
+            toast(`Session ${payload?.action || 'updated'}: ${payload?.date || ''} ${payload?.time || ''}`);
+          } catch (e) {}
+          setUnreadCount((c) => (typeof c === 'number' ? c + 1 : 1));
+          try {
+            const token = localStorage.getItem('token');
+            if (!token) return;
+            const res = await fetch('/api/notifications', { headers: { Authorization: `Bearer ${token}` } });
+            if (!res.ok) return;
+            const data = await res.json();
+            setNotifications(data.notifications || []);
+            setUnreadCount(data.unreadCount || 0);
+          } catch (e) {}
+        });
+
+        socketRef.current.on('notification', async () => {
+          try {
+            const token = localStorage.getItem('token');
+            if (!token) return;
+            const res = await fetch('/api/notifications', { headers: { Authorization: `Bearer ${token}` } });
+            if (!res.ok) return;
+            const data = await res.json();
+            setNotifications(data.notifications || []);
+            setUnreadCount(data.unreadCount || 0);
+          } catch (e) {}
+        });
+      } catch (e) {
+        // ignore socket errors
+      }
+    };
+
+    initSocket();
+
+    return () => {
+      try { socketRef.current?.disconnect(); } catch (e) {}
+    };
+  }, [currentUser]);
+
   return (
     <div className="min-h-screen bg-gray-50">
+      <Toaster position="top-right" />
       <div className="flex">
         <aside className="hidden lg:flex w-64 shrink-0 flex-col border-r border-gray-200 bg-white h-screen sticky top-0">
           <Link to="/" className="flex items-center gap-2 px-6 h-16 border-b border-gray-200">
@@ -68,7 +178,7 @@ export function DashboardShell({ children, navItems, title, role }) {
 
                 return (
                   <Link
-                    key={n.to}
+                    key={`${n.label}-${n.to}`}
                     to={n.to}
                     className={itemClass}
                   >
@@ -99,10 +209,88 @@ export function DashboardShell({ children, navItems, title, role }) {
                   <Search className="h-4 w-4 text-gray-500" />
                   <Input className="border-0 bg-transparent shadow-none focus-visible:ring-0 px-0 h-10" placeholder="Search..." />
                 </div>
-                <Button variant="ghost" size="icon" className="relative">
-                  <Bell className="h-5 w-5" />
-                  <span className="absolute top-2 right-2 h-2 w-2 rounded-full bg-red-500" />
-                </Button>
+                <div className="relative">
+                  <Button variant="ghost" size="icon" className="relative" onClick={async () => {
+                    try {
+                      // toggle panel
+                      setShowNotifications((s) => !s);
+                      const token = localStorage.getItem('token');
+                      if (!token) return;
+                      const res = await fetch('/api/notifications', { headers: { Authorization: `Bearer ${token}` } });
+                      if (!res.ok) return;
+                      const data = await res.json();
+                      setUnreadCount(data.unreadCount || 0);
+                      setNotifications(data.notifications || []);
+                    } catch (e) {
+                      // ignore
+                    }
+                  }}>
+                    <Bell className="h-5 w-5" />
+                    {unreadCount > 0 && (
+                      <span className="absolute -top-1 -right-1 inline-flex items-center justify-center rounded-full bg-red-500 text-white text-xs w-5 h-5">{unreadCount > 99 ? '99+' : unreadCount}</span>
+                    )}
+                  </Button>
+
+                  {showNotifications && (
+                    <div className="absolute right-0 mt-2 w-80 max-h-96 overflow-auto rounded-xl border border-gray-200 bg-white shadow-lg z-50">
+                      <div className="p-3 border-b border-gray-100 flex items-center justify-between">
+                        <div className="text-sm font-semibold">Notifications</div>
+                        <button className="text-xs text-slate-500" onClick={async () => {
+                          try {
+                            const token = localStorage.getItem('token');
+                            const res = await fetch('/api/notifications/mark-all-read', { method: 'PUT', headers: { Authorization: `Bearer ${token}` } });
+                            if (res.ok) {
+                              setNotifications((n) => n.map(x => ({ ...x, isRead: true })));
+                              setUnreadCount(0);
+                            }
+                          } catch (e) {}
+                        }}>Mark all read</button>
+                      </div>
+                      <div>
+                        {notifications.length === 0 ? (
+                          <div className="p-4 text-sm text-slate-500">No notifications</div>
+                        ) : (
+                          notifications.map(n => (
+                            <div key={n._id} className={`p-3 border-b border-gray-50 ${n.isRead ? 'bg-white' : 'bg-slate-50'}`}>
+                              <div className="flex items-start justify-between gap-2">
+                                <div className="flex-1 min-w-0">
+                                  <div className="text-sm font-medium text-slate-900 truncate">{n.title}</div>
+                                  <div className="mt-1 text-xs text-slate-500 truncate">{n.message}</div>
+                                </div>
+                                <div className="text-right">
+                                  <div className="text-xs text-slate-400">{new Date(n.createdAt).toLocaleString()}</div>
+                                </div>
+                              </div>
+                              <div className="mt-2 flex gap-2">
+                                {!n.isRead && (
+                                  <button className="text-xs text-blue-600" onClick={async () => {
+                                    try {
+                                      const token = localStorage.getItem('token');
+                                      const res = await fetch(`/api/notifications/${n._id}/read`, { method: 'PUT', headers: { Authorization: `Bearer ${token}` } });
+                                      if (!res.ok) throw new Error('Failed');
+                                      const data = await res.json();
+                                      setNotifications((prev) => prev.map(x => x._id === n._id ? data.notification : x));
+                                      setUnreadCount(data.unreadCount || 0);
+                                    } catch (e) {
+                                      // ignore
+                                    }
+                                  }}>Mark as read</button>
+                                )}
+                                <button className="text-xs text-slate-500" onClick={() => {
+                                  // optional: navigate to booking or details
+                                  if (n.meta?.bookingId) {
+                                    setShowNotifications(false);
+                                    navigate(`/dashboard/student/bookings`);
+                                  }
+                                }}>View</button>
+                              </div>
+                            </div>
+                          ))
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
                 <ProfileDropdown userData={currentUser} onLogout={handleLogout} />
               </div>
               <p className="text-sm text-gray-600">{greeting}</p>

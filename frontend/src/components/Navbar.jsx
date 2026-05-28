@@ -42,7 +42,7 @@ export function Navbar() {
             const destination = getNavLink(l);
             return (
               <Link
-                key={l.to}
+                key={`${l.to}-${l.label}`}
                 to={destination}
                 className={`text-sm font-medium transition-colors ${
                   path === destination ? "text-slate-900" : "text-slate-600 hover:text-slate-900"
@@ -87,7 +87,7 @@ export function Navbar() {
               const destination = getNavLink(l);
               return (
                 <Link
-                  key={l.to}
+                  key={`${l.to}-${l.label}`}
                   to={destination}
                   onClick={() => setOpen(false)}
                   className="block rounded-lg px-3 py-2 text-sm font-medium hover:bg-gray-100 text-gray-700"

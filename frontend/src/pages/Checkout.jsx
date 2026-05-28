@@ -47,15 +47,63 @@ function Checkout() {
         name: "Trifinity Tutors",
         description: `Session with ${order.tutorName}`,
         order_id: order.orderId,
-        handler: function () {
-          localStorage.removeItem("bookingDetails");
-          navigate("/student-dashboard?tab=bookings");
+        handler: async function (response) {
+          try {
+            const token = localStorage.getItem('token');
+            const bookingDetails = JSON.parse(localStorage.getItem('bookingDetails') || '{}');
+
+            const payload = {
+              ...bookingDetails,
+              orderId: response.razorpay_order_id,
+              paymentId: response.razorpay_payment_id,
+              paymentSignature: response.razorpay_signature,
+            };
+
+            const bookingRes = await fetch('/api/bookings/create', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${token}`,
+              },
+              body: JSON.stringify(payload),
+            });
+
+            if (!bookingRes.ok) {
+              const text = await bookingRes.text();
+              let errMsg = text;
+              try {
+                const parsed = JSON.parse(text);
+                errMsg = parsed.error || parsed.message || JSON.stringify(parsed);
+              } catch (e) {
+                // text is not JSON
+              }
+              throw new Error(errMsg || 'Failed to save booking');
+            }
+
+            // parse json safely
+            const contentType = bookingRes.headers.get('content-type') || '';
+            let bookingJson = null;
+            if (contentType.includes('application/json')) {
+              bookingJson = await bookingRes.json();
+            } else {
+              const text = await bookingRes.text();
+              try { bookingJson = JSON.parse(text); } catch { bookingJson = null; }
+            }
+
+            localStorage.removeItem('bookingDetails');
+            // Redirect to student dashboard so the calendar refreshes immediately
+            navigate('/dashboard/student');
+          } catch (err) {
+            console.error('Booking save error:', err);
+            alert(err.message || 'Booking succeeded but saving failed. Please contact support.');
+            setLoading(false);
+          }
         },
         prefill: {
-          name: JSON.parse(localStorage.getItem("user") || "{}").name,
-          email: JSON.parse(localStorage.getItem("user") || "{}").email,
+          name: JSON.parse(localStorage.getItem('user') || '{}').name,
+          email: JSON.parse(localStorage.getItem('user') || '{}').email,
         },
-        theme: { color: "#6366f1" },
+        theme: { color: '#6366f1' },
         modal: {
           ondismiss: () => setLoading(false),
         },
