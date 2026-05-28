@@ -1,7 +1,7 @@
 import { useNavigate } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "@/lib/auth";
-import { LayoutDashboard, Search, Heart, Calendar, Bell, MessageCircle, Settings } from "lucide-react";
+import { LayoutDashboard, Search, Heart, Calendar, Bell, MessageCircle, Settings, MapPin, ExternalLink } from "lucide-react";
 import { DashboardShell } from "@/components/DashboardShell";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -17,12 +17,16 @@ const nav = [
   { to: "/dashboard/student", label: "Settings", icon: Settings },
 ];
 
+const tabOptions = [
+  { key: "upcoming", label: "Upcoming" },
+  { key: "completed", label: "Completed" },
+  { key: "cancelled", label: "Cancelled" },
+];
+
 const statusStyles = {
-  confirmed:        "bg-emerald-100 text-emerald-800 border-0",
-  pending:          "bg-yellow-100 text-yellow-800 border-0",
-  refund_requested: "bg-orange-100 text-orange-800 border-0",
-  refunded:         "bg-gray-100 text-gray-600 border-0",
-  cancelled:        "bg-red-100 text-red-800 border-0",
+  upcoming:   "bg-blue-100 text-blue-800 border-0",
+  completed:  "bg-emerald-100 text-emerald-800 border-0",
+  cancelled:  "bg-red-100 text-red-800 border-0",
 };
 
 const avatarColors = [
@@ -34,12 +38,24 @@ const avatarColors = [
   "from-cyan-400 to-blue-500",
 ];
 
+function formatBookingDate(date, time) {
+  if (!date) return "";
+  const formattedDate = new Date(date).toLocaleDateString("en-IN", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+  return `${formattedDate}${time ? ` · ${time}` : ""}`;
+}
+
+
 function StudentBookings() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [activeTab, setActiveTab] = useState("upcoming");
 
   useEffect(() => {
     if (!user) {
@@ -56,7 +72,7 @@ function StudentBookings() {
     try {
       setLoading(true);
       const token = localStorage.getItem("token");
-      const res = await fetch("/api/bookings/my", {
+      const res = await fetch("/api/bookings/student", {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (!res.ok) throw new Error("Failed to fetch bookings");
@@ -69,24 +85,27 @@ function StudentBookings() {
     }
   };
 
-  const handleRefund = async (bookingId) => {
-    if (!window.confirm("Request a refund for this session?")) return;
+  const currentBookings = useMemo(
+    () => bookings.filter((booking) => booking.bookingStatus === activeTab),
+    [bookings, activeTab]
+  );
+
+  const handleCancel = async (bookingId) => {
+    if (!window.confirm("Cancel this booking?")) return;
     try {
       const token = localStorage.getItem("token");
-      const res = await fetch(`/api/bookings/${bookingId}/refund`, {
-        method: "POST",
+      const res = await fetch(`/api/bookings/${bookingId}/cancel`, {
+        method: "PUT",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ reason: "Student cancellation" }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error);
-      alert(`Refund of ₹${data.refundAmount} initiated. Takes 5–7 business days.`);
-      fetchBookings(); // refresh list
+      if (!res.ok) throw new Error(data.error || "Unable to cancel booking");
+      setBookings((prev) => prev.map((booking) => booking._id === bookingId ? data.booking : booking));
     } catch (err) {
-      alert(err.message);
+      alert(err.message || "Could not cancel booking.");
     }
   };
 
@@ -94,78 +113,99 @@ function StudentBookings() {
 
   return (
     <DashboardShell navItems={nav} title="My Bookings" role="Student">
-      {loading ? (
-        <Card className="p-10 text-center border-border/60">
-          <p className="text-muted-foreground">Loading your bookings...</p>
-        </Card>
-      ) : error ? (
-        <Card className="p-10 text-center border-border/60">
-          <p className="text-red-500">{error}</p>
-          <Button onClick={fetchBookings} className="mt-4" variant="outline">Retry</Button>
-        </Card>
-      ) : bookings.length === 0 ? (
-        <Card className="p-10 text-center border-border/60">
-          <Calendar className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-          <p className="font-semibold text-lg mb-1">No bookings yet</p>
-          <p className="text-muted-foreground text-sm mb-6">
-            Book a session with a tutor to get started.
-          </p>
-          <Button onClick={() => navigate("/tutors")} className="bg-gradient-primary">
-            Find a tutor
-          </Button>
-        </Card>
-      ) : (
-        <div className="space-y-4">
-          {bookings.map((booking, i) => {
-            const tutor = booking.tutorId;
-            const color = avatarColors[i % avatarColors.length];
-            const formattedDate = new Date(booking.date).toLocaleDateString("en-IN", {
-              year: "numeric", month: "long", day: "numeric",
-            });
-
-            return (
-              <Card
-                key={booking._id}
-                className="flex flex-col sm:flex-row sm:items-center gap-4 p-5 border-border/60 hover:bg-accent/30 transition"
+      <div className="space-y-6">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h2 className="text-2xl font-semibold text-slate-900">Bookings</h2>
+            <p className="text-sm text-slate-500">Manage your upcoming, completed, and cancelled sessions.</p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {tabOptions.map((tab) => (
+              <button
+                key={tab.key}
+                onClick={() => setActiveTab(tab.key)}
+                className={`rounded-full px-4 py-2 text-sm font-medium transition ${
+                  activeTab === tab.key
+                    ? 'bg-slate-900 text-white'
+                    : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                }`}
               >
-                {/* Avatar */}
-                <div className={`h-12 w-12 shrink-0 rounded-xl bg-gradient-to-br ${color}`} />
+                {tab.label}
+              </button>
+            ))}
+          </div>
+        </div>
 
-                {/* Details */}
-                <div className="flex-1 min-w-0 space-y-1">
-                  <p className="font-semibold truncate">
-                    {tutor?.name || "Tutor"}
-                  </p>
-                  <p className="text-sm text-muted-foreground truncate">
-                    {tutor?.subject || "Session"} · {formattedDate} · {booking.timeSlot}
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    {booking.mode} · {booking.durationMins} mins · ₹{booking.totalAmount}
-                  </p>
+        {loading ? (
+          <Card className="p-10 text-center border-border/60">
+            <p className="text-slate-500">Loading your bookings...</p>
+          </Card>
+        ) : error ? (
+          <Card className="p-10 text-center border-border/60">
+            <p className="text-red-500">{error}</p>
+            <Button onClick={fetchBookings} className="mt-4" variant="outline">Retry</Button>
+          </Card>
+        ) : currentBookings.length === 0 ? (
+          <Card className="p-10 text-center border-border/60">
+            <Calendar className="h-12 w-12 text-slate-400 mx-auto mb-4" />
+            <h3 className="text-xl font-semibold text-slate-900">No {activeTab} bookings yet</h3>
+            <p className="mt-2 text-sm text-slate-500">Book a session and it will appear here once confirmed.</p>
+            <Button onClick={() => navigate('/tutors')} className="mt-6">
+              Find a tutor
+            </Button>
+          </Card>
+        ) : (
+          <div className="space-y-4">
+            {currentBookings.map((booking, index) => (
+              <Card key={booking._id} className="grid gap-4 rounded-3xl border border-slate-200 p-6 lg:grid-cols-[auto_1fr_auto] lg:items-center">
+                <div className="flex items-center gap-4">
+                  <div className={`flex h-16 w-16 items-center justify-center rounded-3xl bg-gradient-to-br ${avatarColors[index % avatarColors.length]} text-white text-lg font-semibold`}> 
+                    {booking.tutorName?.split(' ').map((part) => part[0]).join('').slice(0, 2)}
+                  </div>
+                  <div>
+                    <p className="text-base font-semibold text-slate-900 truncate">{booking.tutorName}</p>
+                    <p className="text-sm text-slate-500 truncate">{booking.subject}</p>
+                  </div>
                 </div>
 
-                {/* Status + action */}
-                <div className="flex items-center gap-3 shrink-0">
-                  <Badge className={statusStyles[booking.status] || "border-0"}>
-                    {booking.status.replace("_", " ")}
-                  </Badge>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div>
+                    <p className="text-xs uppercase tracking-[0.24em] text-slate-500">Session</p>
+                    <p className="mt-1 text-sm text-slate-900">{formatBookingDate(booking.date, booking.time)}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs uppercase tracking-[0.24em] text-slate-500">Mode</p>
+                    <p className="mt-1 text-sm text-slate-900">{booking.mode === 'home' ? 'Home visit' : 'Online session'}</p>
+                  </div>
+                </div>
 
-                  {booking.status === "confirmed" && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="text-red-600 border-red-200 hover:bg-red-50"
-                      onClick={() => handleRefund(booking._id)}
-                    >
-                      Cancel & refund
-                    </Button>
-                  )}
+                <div className="flex flex-col items-start gap-3 sm:items-end">
+                  <Badge className={statusStyles[booking.bookingStatus] || 'bg-slate-100 text-slate-700'}>
+                    {booking.bookingStatus?.charAt(0).toUpperCase() + booking.bookingStatus?.slice(1)}
+                  </Badge>
+                  <div className="flex flex-wrap gap-2">
+                    {booking.mode === 'online' && booking.bookingStatus === 'upcoming' && (
+                      <Button size="sm" variant="outline" onClick={() => window.open(booking.meetingLink || '#', '_blank')}>
+                        <ExternalLink className="mr-2 h-4 w-4" /> Join
+                      </Button>
+                    )}
+                    {booking.mode === 'home' && booking.bookingStatus === 'upcoming' && (
+                      <Button size="sm" variant="outline" onClick={() => window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(booking.location || '')}`, '_blank')}>
+                        <MapPin className="mr-2 h-4 w-4" /> Directions
+                      </Button>
+                    )}
+                    {booking.bookingStatus === 'upcoming' && (
+                      <Button size="sm" variant="ghost" className="text-red-600 hover:bg-red-50" onClick={() => handleCancel(booking._id)}>
+                        Cancel
+                      </Button>
+                    )}
+                  </div>
                 </div>
               </Card>
-            );
-          })}
-        </div>
-      )}
+            ))}
+          </div>
+        )}
+      </div>
     </DashboardShell>
   );
 }

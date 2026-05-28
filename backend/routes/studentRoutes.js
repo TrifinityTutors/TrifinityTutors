@@ -1,4 +1,5 @@
 const express = require("express")
+const mongoose = require("mongoose");
 const router = express.Router()
 
 const StudentRequest = require("../models/StudentRequest")
@@ -85,6 +86,11 @@ router.post("/google-signup", async (req, res) => {
       console.log("✅ Created new student:", email);
     }
 
+    await student.populate({
+      path: "savedTutors",
+      select: "_id name subject hourlyRate rating reviews profilePhoto photo",
+    });
+
     const tokenJwt = jwt.sign({ id: student._id, role: student.role }, process.env.JWT_SECRET, {
       expiresIn: "7d",
     });
@@ -126,7 +132,12 @@ router.get("/me", auth, async (req, res) => {
       return res.status(403).json({ message: "Forbidden" });
     }
 
-    const student = await Student.findById(req.user.id).select("-__v");
+    const student = await Student.findById(req.user.id)
+      .populate({
+        path: "savedTutors",
+        select: "_id name subject hourlyRate rating reviews profilePhoto photo",
+      })
+      .select("-__v");
     if (!student) {
       return res.status(404).json({ message: "Student not found" });
     }
@@ -163,7 +174,12 @@ router.get("/profile", auth, async (req, res) => {
       return res.status(403).json({ message: "Forbidden" });
     }
 
-    const student = await Student.findById(req.user.id).select("-__v");
+    const student = await Student.findById(req.user.id)
+      .populate({
+        path: "savedTutors",
+        select: "_id name subject hourlyRate rating reviews profilePhoto photo",
+      })
+      .select("-__v");
     if (!student) return res.status(404).json({ message: "Student not found" });
 
     res.json({
@@ -172,6 +188,102 @@ router.get("/profile", auth, async (req, res) => {
     });
   } catch (err) {
     console.error("Error getting profile:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+router.post("/save-tutor/:tutorId", auth, async (req, res) => {
+  try {
+    if (req.user.role !== "student") {
+      return res.status(403).json({ message: "Only students can save tutors" });
+    }
+
+    const { tutorId } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(tutorId)) {
+      return res.status(400).json({ message: "Invalid tutor ID" });
+    }
+
+    const tutor = await Tutor.findById(tutorId);
+    if (!tutor) {
+      return res.status(404).json({ message: "Tutor not found" });
+    }
+
+    const student = await Student.findByIdAndUpdate(
+      req.user.id,
+      { $addToSet: { savedTutors: tutor._id } },
+      { new: true }
+    ).populate({
+      path: "savedTutors",
+      select: "_id name subject hourlyRate rating reviews profilePhoto photo",
+    });
+
+    if (!student) {
+      return res.status(404).json({ message: "Student not found" });
+    }
+
+    res.json({ success: true, savedTutors: student.savedTutors || [] });
+  } catch (err) {
+    console.error("Error saving tutor:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+router.delete("/save-tutor/:tutorId", auth, async (req, res) => {
+  try {
+    if (req.user.role !== "student") {
+      return res.status(403).json({ message: "Only students can remove saved tutors" });
+    }
+
+    const { tutorId } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(tutorId)) {
+      return res.status(400).json({ message: "Invalid tutor ID" });
+    }
+
+    const tutor = await Tutor.findById(tutorId);
+    if (!tutor) {
+      return res.status(404).json({ message: "Tutor not found" });
+    }
+
+    const student = await Student.findByIdAndUpdate(
+      req.user.id,
+      { $pull: { savedTutors: tutor._id } },
+      { new: true }
+    ).populate({
+      path: "savedTutors",
+      select: "_id name subject hourlyRate rating reviews profilePhoto photo",
+    });
+
+    if (!student) {
+      return res.status(404).json({ message: "Student not found" });
+    }
+
+    res.json({ success: true, savedTutors: student.savedTutors || [] });
+  } catch (err) {
+    console.error("Error removing saved tutor:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+router.get("/saved-tutors", auth, async (req, res) => {
+  try {
+    if (req.user.role !== "student") {
+      return res.status(403).json({ message: "Only students can access saved tutors" });
+    }
+
+    const student = await Student.findById(req.user.id)
+      .populate({
+        path: "savedTutors",
+        select: "_id name subject hourlyRate rating reviews profilePhoto photo",
+      })
+      .select("savedTutors");
+
+    if (!student) {
+      return res.status(404).json({ message: "Student not found" });
+    }
+
+    res.json({ success: true, savedTutors: student.savedTutors || [] });
+  } catch (err) {
+    console.error("Error fetching saved tutors:", err);
     res.status(500).json({ message: "Server error" });
   }
 });

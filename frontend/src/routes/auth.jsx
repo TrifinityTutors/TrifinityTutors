@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Link, Outlet, useLocation } from "react-router-dom";
 import { GraduationCap, ArrowLeft } from "lucide-react";
+import homeUIImage from "@/assets/homeUI.png";
 
 export const Route = createFileRoute("/auth")({
   component: AuthLayout,
@@ -16,20 +17,37 @@ function AuthLayout() {
           <div className="grid h-9 w-9 place-items-center rounded-xl bg-white/15 backdrop-blur"><GraduationCap className="h-5 w-5" /></div>
           <span className="font-display text-lg font-bold">Trifinity Tutors</span>
         </Link>
-        <div className="relative z-10">
-          <h2 className="font-display text-4xl font-bold leading-tight">Learn from the best, on your schedule.</h2>
-          <p className="mt-4 text-primary-foreground/85 max-w-md">
-            Join 50,000+ students and tutors building skills, growing careers, and unlocking potential together.
-          </p>
-          <div className="mt-10 flex items-center gap-3">
-            <div className="flex -space-x-3">
-              {["from-rose-300 to-pink-400","from-emerald-300 to-teal-400","from-amber-300 to-orange-400","from-violet-300 to-purple-400"].map((g,i)=>(
-                <div key={i} className={`h-10 w-10 rounded-full bg-gradient-to-br ${g} ring-2 ring-primary`} />
-              ))}
+        
+        <div className="relative z-20 flex flex-col justify-center">
+          <div className="space-y-6">
+            <div>
+              <h2 className="font-display text-4xl font-bold leading-tight">Learn from the best, on your schedule.</h2>
+              <p className="mt-4 text-primary-foreground/85 max-w-md">
+                Join 50,000+ students and tutors building skills, growing careers, and unlocking potential together.
+              </p>
             </div>
-            <div className="text-sm text-primary-foreground/85">Trusted by 50k+ learners worldwide</div>
+            
+            <div className="flex items-center gap-3">
+              <div className="flex -space-x-3">
+                {["from-rose-300 to-pink-400","from-emerald-300 to-teal-400","from-amber-300 to-orange-400","from-violet-300 to-purple-400"].map((g,i)=>(
+                  <div key={i} className={`h-10 w-10 rounded-full bg-gradient-to-br ${g} ring-2 ring-primary`} />
+                ))}
+              </div>
+              <div className="text-sm text-primary-foreground/85">Trusted by 50k+ learners worldwide</div>
+            </div>
+          </div>
+          
+          <div className="mt-12 flex justify-center">
+            <div className="w-full max-w-xs backdrop-blur-md bg-white/10 rounded-2xl p-4 border border-white/20 shadow-xl hover:shadow-2xl transition-shadow duration-300">
+              <img 
+                src={homeUIImage} 
+                alt="Educational community illustration" 
+                className="w-full h-auto object-cover rounded-xl"
+              />
+            </div>
           </div>
         </div>
+        
         <div className="text-xs text-primary-foreground/70">© Trifinity Tutors</div>
         <div className="absolute -bottom-20 -right-20 h-80 w-80 rounded-full bg-white/10 blur-3xl" />
         <div className="absolute -top-10 -left-10 h-60 w-60 rounded-full bg-white/10 blur-3xl" />

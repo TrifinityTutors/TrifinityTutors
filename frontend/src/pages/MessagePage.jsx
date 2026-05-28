@@ -4,7 +4,7 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft, Lock, Search, Send, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { getTutorById } from "@/data/tutors";
+// Use backend API for tutor data; no static mock data
 
 const quickQuestions = [
   "Do you teach JEE Advanced?",
@@ -63,14 +63,11 @@ function MessagePage() {
     const loadTutor = async () => {
       setLoadingTutor(true);
       try {
-        const response = await axios.get(`http://localhost:5000/api/tutors/profile/${id}`);
-        if (response?.data) {
-          setTutor(response.data);
-        } else {
-          setTutor(getTutorById(id));
-        }
+        const response = await axios.get(`/api/tutors/profile/${id}`);
+        setTutor(response?.data || null);
       } catch (error) {
-        setTutor(getTutorById(id));
+        console.error("Failed to load tutor profile", error);
+        setTutor(null);
       } finally {
         setLoadingTutor(false);
       }

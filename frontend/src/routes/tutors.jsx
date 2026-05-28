@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
+import axios from "axios";
 import { Search, MapPin, Star, Heart, ArrowRight, Filter, SlidersHorizontal } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,25 +8,72 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Slider } from "@/components/ui/slider";
-import { tutorsData } from "@/data/tutors";
-
 export const Route = createFileRoute("/tutors")({
   component: TutorsPage,
   head: () => ({ meta: [{ title: "Browse Tutors — Trifinity" }, { name: "description", content: "Browse verified college tutors by subject, rating, location, and price." }] }),
 });
 
-const tutors = tutorsData;
+const gradients = [
+  "from-blue-400 to-indigo-500",
+  "from-rose-400 to-pink-500",
+  "from-emerald-400 to-teal-500",
+  "from-amber-400 to-orange-500",
+  "from-violet-400 to-purple-500",
+  "from-cyan-400 to-blue-500",
+];
 
 const subjectList = ["Mathematics","Physics","Chemistry","Biology","Computer Science","English","Economics","Languages"];
 
 function TutorsPage() {
+  const [tutors, setTutors] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        const res = await axios.get("/api/tutors");
+        if (!mounted) return;
+        const data = (res.data || []).map((t, i) => ({
+          // normalize to the fields the UI expects
+          id: t._id,
+          _id: t._id,
+          name: t.name,
+          subject: t.subject || (t.subjects && t.subjects[0]) || "",
+          subjects: t.subjects || [],
+          tags: t.tags || (t.subjects ? t.subjects.slice(0, 5) : []),
+          rating: t.rating || 4.8,
+          reviews: t.reviews || (t.reviewCount || 0),
+          price: t.hourlyRate || t.price || 0,
+          exp: t.experience || t.exp || 0,
+          location: t.locality || t.location || "Remote",
+          grad: gradients[i % gradients.length],
+          college: t.education || "",
+          verified: t.verificationStatus === "verified" || !!t.verified,
+          languages: t.languages || [],
+          bio: t.bio || "",
+          education: t.education || "",
+          availability: t.availability || [],
+          timeSlots: t.timeSlots || [],
+        }));
+        setTutors(data);
+        console.debug(`Loaded ${data.length} tutors from /api/tutors`, data.map(t => ({ id: t.id, email: t.email, price: t.price, profileComplete: true })));
+      } catch (err) {
+        console.error("Failed to load tutors", err);
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    })();
+    return () => { mounted = false; };
+  }, []);
+
   const [searchQuery, setSearchQuery] = useState("");
   const [locationQuery, setLocationQuery] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const [locationTerm, setLocationTerm] = useState("");
   const [selectedSubjects, setSelectedSubjects] = useState([]);
   const [ratingFilters, setRatingFilters] = useState([]);
-  const [price, setPrice] = useState([100]);
+  const [price, setPrice] = useState([1000]);
   const [sortOption, setSortOption] = useState("best");
 
   const handleSearch = () => {
@@ -56,7 +104,7 @@ function TutorsPage() {
     setLocationTerm("");
     setSelectedSubjects([]);
     setRatingFilters([]);
-    setPrice([100]);
+    setPrice([1000]);
     setSortOption("best");
   };
 
@@ -65,7 +113,11 @@ function TutorsPage() {
     const normalizedLocation = locationTerm.toLowerCase();
     const maxPrice = price[0];
 
-    return tutors
+    const list = tutors || [];
+
+    if (loading) return [];
+
+    return list
       .filter((tutor) => {
         if (normalizedSearch) {
           const nameMatch = tutor.name.toLowerCase().includes(normalizedSearch);
@@ -90,7 +142,7 @@ function TutorsPage() {
           if (tutor.rating < minRating) return false;
         }
 
-        if (tutor.price > maxPrice) {
+        if ((tutor.price || 0) > maxPrice) {
           return false;
         }
 
@@ -156,7 +208,7 @@ function TutorsPage() {
               </div>
               <div className="mt-6">
                 <h4 className="text-sm font-semibold">Max hourly price</h4>
-                <Slider value={price} onValueChange={setPrice} min={5} max={100} step={1} className="mt-4" />
+                <Slider value={price} onValueChange={setPrice} min={5} max={1000} step={1} className="mt-4" />
                 <div className="mt-2 text-xs text-muted-foreground">Up to <span className="font-semibold text-foreground">${price[0]}/hr</span></div>
               </div>
               <div className="mt-6">

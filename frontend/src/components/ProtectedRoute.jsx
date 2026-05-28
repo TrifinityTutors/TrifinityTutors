@@ -12,7 +12,7 @@ function ProtectedRoute({ children }) {
     return <Navigate to="/auth/login" replace />;
   }
 
-  const tutorOnlyPaths = ["/tutor-dashboard", "/dashboard/tutor"];
+  const tutorOnlyPaths = ["/tutor-dashboard", "/dashboard/tutor", "/tutor/schedule"];
   const studentOnlyPaths = ["/student-dashboard", "/dashboard/student"];
 
   if (user.role === "tutor" && studentOnlyPaths.includes(location.pathname)) {

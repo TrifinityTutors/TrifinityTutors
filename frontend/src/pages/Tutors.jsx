@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link, useSearchParams } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { Search, MapPin, Star, Heart, ArrowRight, Filter, SlidersHorizontal } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { useAuth } from "@/lib/auth";
 
 const gradients = [
   "from-blue-400 to-indigo-500",
@@ -66,11 +67,15 @@ function Tutors() {
   const [location, setLocation] = useState("");
   const [selectedSubjects, setSelectedSubjects] = useState([]);
   const [selectedRatings, setSelectedRatings] = useState([]);
-  const [maxPrice, setMaxPrice] = useState(100);
+  const [maxPrice, setMaxPrice] = useState(10000);
   const [tutors, setTutors] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [searchParams, setSearchParams] = useSearchParams();
+  const [savedTutorIds, setSavedTutorIds] = useState([]);
+  const [savingTutorIds, setSavingTutorIds] = useState([]);
+  const { user, token, refreshProfile } = useAuth();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const initialSearch = searchParams.get("search") || "";
@@ -80,10 +85,22 @@ function Tutors() {
   }, [searchParams]);
 
   useEffect(() => {
+    if (user?.savedTutors) {
+      setSavedTutorIds(
+        user.savedTutors.map((tutor) => String(tutor._id || tutor.id || tutor))
+      );
+    } else {
+      setSavedTutorIds([]);
+    }
+  }, [user]);
+
+  useEffect(() => {
     async function fetchTutors() {
       try {
         const response = await fetch("http://localhost:5000/api/tutors");
         const data = await response.json();
+
+        console.log("Fetched tutors:", data);
 
         if (!response.ok) {
           throw new Error(data.message || "Unable to fetch tutors");
@@ -96,11 +113,12 @@ function Tutors() {
             name: t.name || t.fullName || "Tutor",
             subject: t.subject || (t.subjects?.[0] || "Tutor"),
             tags: t.subjects?.slice(0, 3) || [t.subject || "Tutoring"],
-            rating: (typeof t.rating === "number" ? t.rating.toFixed(2) : t.rating) || "4.95",
+            rating: typeof t.rating === "number" ? t.rating.toFixed(2) : t.rating || "4.95",
             reviews: t.reviews || 0,
             price: t.hourlyRate || t.price || 0,
             exp: t.experience || 0,
             location: t.locality || t.city || t.location || "Remote",
+            profilePhoto: t.profilePhoto || t.photo || "/default-avatar.svg",
             grad: gradients[index % gradients.length],
           }))
         );
@@ -155,8 +173,51 @@ function Tutors() {
     setLocation("");
     setSelectedSubjects([]);
     setSelectedRatings([]);
-    setMaxPrice(100);
+    setMaxPrice(10000);
     setSearchParams({});
+  };
+
+  const handleToggleFavorite = async (tutorId, currentlySaved) => {
+    if (!token || !user) {
+      return navigate("/auth/login");
+    }
+
+    if (user.role !== "student") {
+      return alert("Only students can save tutors.");
+    }
+
+    if (savingTutorIds.includes(tutorId)) {
+      return;
+    }
+
+    setSavingTutorIds((current) => [...current, tutorId]);
+    const method = currentlySaved ? "DELETE" : "POST";
+
+    try {
+      const response = await fetch(`http://localhost:5000/api/students/save-tutor/${tutorId}`, {
+        method,
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.message || "Unable to update saved tutors.");
+      }
+
+      const updatedIds = (data.savedTutors || []).map((tutor) => String(tutor._id || tutor.id || tutor));
+      setSavedTutorIds(updatedIds);
+      if (refreshProfile) {
+        refreshProfile();
+      }
+    } catch (err) {
+      console.error(err);
+      alert(err.message || "Could not update favorites. Please try again.");
+    } finally {
+      setSavingTutorIds((current) => current.filter((id) => id !== tutorId));
+    }
   };
 
   return (
@@ -222,7 +283,7 @@ function Tutors() {
                 <input
                   type="range"
                   min="5"
-                  max="100"
+                  max="10000"
                   value={maxPrice}
                   onChange={(e) => setMaxPrice(parseInt(e.target.value, 10))}
                   className="mt-4 w-full"
@@ -289,7 +350,13 @@ function Tutors() {
             ) : (
               <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
                 {filteredTutors.map((t) => (
-                  <TutorCard key={t.id} t={t} />
+                  <TutorCard
+                    key={t.id}
+                    t={t}
+                    isSaved={savedTutorIds.includes(String(t.id || t._id))}
+                    onToggleFavorite={handleToggleFavorite}
+                    isSaving={savingTutorIds.includes(String(t.id || t._id))}
+                  />
                 ))}
               </div>
             )}
@@ -300,21 +367,36 @@ function Tutors() {
   );
 }
 
-function TutorCard({ t }) {
+function TutorCard({ t, isSaved, onToggleFavorite, isSaving }) {
+  const iconClass = isSaved ? "text-red-500" : "text-gray-400 group-hover:text-red-500";
+
   return (
     <Card className="group relative overflow-hidden border border-gray-200 p-6 hover:shadow-lg transition-all">
-      <button className="absolute right-4 top-4 grid h-9 w-9 place-items-center rounded-full bg-white border border-gray-200 text-gray-400 hover:text-red-500 transition">
-        <Heart className="h-4 w-4" />
+      <button
+        type="button"
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          onToggleFavorite?.(t.id || t._id, isSaved);
+        }}
+        disabled={isSaving}
+        className={`absolute right-4 top-4 grid h-9 w-9 place-items-center rounded-full bg-white border border-gray-200 shadow-sm transition ${isSaving ? "opacity-70 cursor-wait" : "hover:bg-red-50"}`}
+        aria-label={isSaved ? "Remove saved tutor" : "Save tutor"}
+      >
+        <Heart className={`h-4 w-4 transition-colors ${iconClass}`} fill={isSaved ? "currentColor" : "none"} />
       </button>
       <div className="flex items-center gap-4">
         <div className="relative h-16 w-16 rounded-2xl overflow-hidden bg-slate-200 shadow-sm">
-          {t.profilePhoto ? (
-            <img src={t.profilePhoto} alt={t.name} className="h-full w-full object-cover" />
-          ) : (
-            <div className={`h-full w-full grid place-items-center text-white font-bold text-xl bg-gradient-to-br ${t.grad}`}>
-              {t.name?.split(" ").map((word) => word[0]).join("")}
-            </div>
-          )}
+          <img
+            src={t.profilePhoto || t.photo || "/default-avatar.svg"}
+            alt={t.name}
+            onError={(event) => {
+              if (!event.currentTarget.src.endsWith("/default-avatar.svg")) {
+                event.currentTarget.src = "/default-avatar.svg";
+              }
+            }}
+            className="h-full w-full object-cover"
+          />
           <span className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full bg-emerald-500 ring-2 ring-white" />
         </div>
         <div className="flex-1 min-w-0">

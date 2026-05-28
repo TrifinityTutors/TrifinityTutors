@@ -10,6 +10,7 @@ const { Server } = require("socket.io");
 const studentRoutes = require("./routes/studentRoutes");
 const tutorRoutes = require("./routes/tutorRoutes");
 const bookingRoutes = require("./routes/bookingRoutes");
+const notificationRoutes = require("./routes/notificationRoutes");
 
 const app = express();
 const httpServer = createServer(app);
@@ -46,6 +47,7 @@ app.use("/api/students", studentRoutes);
 app.use("/api/tutors", tutorRoutes);
 app.use("/api/auth", require("./routes/auth"));
 app.use("/api/bookings", bookingRoutes);
+app.use("/api/notifications", notificationRoutes);
 
 // Switch from app.listen to httpServer.listen
 httpServer.listen(5000, () => {

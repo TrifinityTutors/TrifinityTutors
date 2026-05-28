@@ -1,0 +1,149 @@
+﻿{
+    "value":  [
+                  {
+                      "_id":  "6a1828f73a78a64107241aa9",
+                      "name":  "Speak Mate",
+                      "email":  "speakmate2025@gmail.com",
+                      "subject":  "mathematics",
+                      "subjects":  [
+                                       "English",
+                                       "Python",
+                                       "JavaScript"
+                                   ],
+                      "locality":  "Pune",
+                      "experience":  4,
+                      "bio":  "eregsgg",
+                      "hourlyRate":  555,
+                      "trialRate":  55,
+                      "profilePhoto":  "http://localhost:5000/uploads/profilePhoto-1779968246963-763421742.jpeg",
+                      "tags":  [
+                                   "English",
+                                   "Python",
+                                   "JavaScript"
+                               ],
+                      "status":  "pending",
+                      "profileComplete":  true,
+                      "rating":  4.95,
+                      "reviews":  0
+                  },
+                  {
+                      "_id":  "6a1826983a78a64107241a1a",
+                      "name":  "E2E Test Tutor",
+                      "email":  "e2e_test_tutor_20260528@example.com",
+                      "subject":  "Mathematics",
+                      "subjects":  [
+
+                                   ],
+                      "locality":  "Remote",
+                      "experience":  2,
+                      "bio":  "",
+                      "hourlyRate":  0,
+                      "trialRate":  0,
+                      "profilePhoto":  "",
+                      "tags":  [
+
+                               ],
+                      "status":  "pending",
+                      "profileComplete":  true,
+                      "rating":  4.95,
+                      "reviews":  0
+                  },
+                  {
+                      "_id":  "6a17c04c98f8ad5fba8f5858",
+                      "name":  "Sunna test",
+                      "email":  "sunildangi000111@gmail.com",
+                      "subject":  "test",
+                      "subjects":  [
+                                       "Mathematics",
+                                       "Calculus"
+                                   ],
+                      "locality":  "test",
+                      "experience":  5,
+                      "bio":  "test",
+                      "hourlyRate":  10,
+                      "trialRate":  34,
+                      "profilePhoto":  "http://localhost:5000/uploads/profilePhoto-1779941452722-673947854.png",
+                      "tags":  [
+                                   "Mathematics",
+                                   "Calculus"
+                               ],
+                      "status":  "pending",
+                      "profileComplete":  true,
+                      "rating":  4.95,
+                      "reviews":  0
+                  },
+                  {
+                      "_id":  "6a173eff5583676d19e97f09",
+                      "name":  "ramlal ji",
+                      "email":  "jgautam666@gmail.com",
+                      "subject":  "physics",
+                      "subjects":  [
+                                       "Physics"
+                                   ],
+                      "locality":  "mumbai",
+                      "experience":  16,
+                      "bio":  "hey i am a professor in iit",
+                      "hourlyRate":  5,
+                      "trialRate":  1,
+                      "profilePhoto":  "http://localhost:5000/uploads/profilePhoto-1779908351416-337290533.png",
+                      "tags":  [
+                                   "Physics"
+                               ],
+                      "status":  "pending",
+                      "profileComplete":  true,
+                      "rating":  4.95,
+                      "reviews":  0
+                  },
+                  {
+                      "_id":  "6a1699e82aa24b0781470bcc",
+                      "name":  "jhon doe",
+                      "email":  "jhondoe@gmail.com",
+                      "subject":  "mathematics",
+                      "subjects":  [
+                                       "Chemistry",
+                                       "Music"
+                                   ],
+                      "locality":  "Pune",
+                      "experience":  6,
+                      "bio":  "grgrgg",
+                      "hourlyRate":  30,
+                      "trialRate":  1,
+                      "profilePhoto":  "http://localhost:5000/uploads/profilePhoto-1779866088040-479059226.jpg",
+                      "tags":  [
+                                   "Chemistry",
+                                   "Music"
+                               ],
+                      "status":  "pending",
+                      "profileComplete":  true,
+                      "rating":  4.95,
+                      "reviews":  0
+                  },
+                  {
+                      "_id":  "6a168e3a22b0acf766d68923",
+                      "name":  "ASHISH RAJ",
+                      "email":  "ashishraj6206@gmail.com",
+                      "subject":  "mathematics",
+                      "subjects":  [
+                                       "French",
+                                       "JavaScript",
+                                       "Python"
+                                   ],
+                      "locality":  "Pune",
+                      "experience":  5,
+                      "bio":  "i am a btech student",
+                      "hourlyRate":  44,
+                      "trialRate":  2,
+                      "profilePhoto":  "http://localhost:5000/uploads/profilePhoto-1779939860200-635500003.png",
+                      "tags":  [
+                                   "French",
+                                   "JavaScript",
+                                   "Python"
+                               ],
+                      "status":  "pending",
+                      "profileComplete":  true,
+                      "rating":  4.95,
+                      "reviews":  0
+                  }
+              ],
+    "Count":  6
+}

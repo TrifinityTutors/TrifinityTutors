@@ -88,28 +88,28 @@ function App() {
         } />
 
         <Route path="/student-dashboard" element={
-          <MainLayout>
-            <ProtectedRoute>
-              <StudentDashboard />
-            </ProtectedRoute>
-          </MainLayout>
+          <ProtectedRoute>
+            <StudentDashboard />
+          </ProtectedRoute>
+        } />
+
+        <Route path="/student-dashboard/bookings" element={
+          <ProtectedRoute>
+            <StudentBookings />
+          </ProtectedRoute>
         } />
 
 
         <Route path="/dashboard/student/bookings" element={
-          <MainLayout>
-            <ProtectedRoute>
-              <StudentBookings />
-            </ProtectedRoute>
-          </MainLayout>
+          <ProtectedRoute>
+            <StudentBookings />
+          </ProtectedRoute>
         } />
 
         <Route path="/dashboard/student" element={
-          <MainLayout>
-            <ProtectedRoute>
-              <StudentDashboard />
-            </ProtectedRoute>
-          </MainLayout>
+          <ProtectedRoute>
+            <StudentDashboard />
+          </ProtectedRoute>
         } />
 
         <Route path="/dashboard/tutor" element={
