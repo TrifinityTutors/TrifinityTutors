@@ -1,4 +1,5 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom"
+import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom"
+import { AnimatePresence, motion } from "framer-motion"
 
 import LandingPage from "./routes/index"
 import StudentRegister from "./pages/StudentRegister"
@@ -34,182 +35,187 @@ import PublicRoute from "./components/PublicRoute";
 import StudentBookings from "./pages/StudentBookings";
 
 
+function AppRoutes() {
+  const location = useLocation();
+
+  return (
+    <AnimatePresence mode="wait">
+      <motion.div
+        key={location.pathname}
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -16 }}
+        transition={{ duration: 0.4, ease: "easeOut" }}
+      >
+        <Routes location={location} key={location.pathname}>
+
+          {/* USER ROUTES WITH LAYOUT */}
+
+          <Route path="/" element={
+            <MainLayout>
+              <PublicRoute>
+                <LandingPage />
+              </PublicRoute>
+            </MainLayout>
+          } />
+
+          <Route path="/auth" element={
+            <AuthLayout />
+          }>
+            <Route path="login" element={<LoginPage />} />
+            <Route path="signup" element={<SignupPage />} />
+          </Route>
+
+          <Route path="/student-register" element={
+            <MainLayout>
+              <StudentRegister />
+            </MainLayout>
+          } />
+
+          <Route path="/register-tutor" element={
+            <MainLayout>
+              <RegisterTutor />
+            </MainLayout>
+          } />
+
+          <Route path="/tutor-register" element={
+            <MainLayout>
+              <RegisterTutor />
+            </MainLayout>
+          } />
+
+          <Route path="/dashboard" element={
+            <ProtectedRoute>
+              <TutorDashboard />
+            </ProtectedRoute>
+          } />
+
+          <Route path="/tutor-dashboard" element={
+            <ProtectedRoute>
+              <TutorDashboard />
+            </ProtectedRoute>
+          } />
+
+          <Route path="/student-dashboard" element={
+            <ProtectedRoute>
+              <StudentDashboard />
+            </ProtectedRoute>
+          } />
+
+          <Route path="/student-dashboard/bookings" element={
+            <ProtectedRoute>
+              <StudentBookings />
+            </ProtectedRoute>
+          } />
+
+
+          <Route path="/dashboard/student/bookings" element={
+            <ProtectedRoute>
+              <StudentBookings />
+            </ProtectedRoute>
+          } />
+
+          <Route path="/dashboard/student" element={
+            <ProtectedRoute>
+              <StudentDashboard />
+            </ProtectedRoute>
+          } />
+
+          <Route path="/dashboard/tutor" element={
+            <ProtectedRoute>
+              <TutorDashboard />
+            </ProtectedRoute>
+          } />
+
+          <Route path="/tutor/schedule" element={
+            <MainLayout>
+              <ProtectedRoute>
+                <TutorSchedule />
+              </ProtectedRoute>
+            </MainLayout>
+          } />
+
+          <Route path="/my-applications" element={
+            <MainLayout>
+              <MyApplications />
+            </MainLayout>
+          } />
+
+          <Route path="/tutors" element={
+            <MainLayout>
+              <Tutors />
+            </MainLayout>
+          } />
+          <Route path="/tutors/:id" element={
+            <MainLayout>
+              <TutorDetails />
+            </MainLayout>
+          } />
+          <Route path="/messages/:id" element={
+            <MainLayout>
+              <ProtectedRoute>
+                <MessagePage />
+              </ProtectedRoute>
+            </MainLayout>
+          } />
+          <Route path="/booking/:id" element={
+            <MainLayout>
+              <ProtectedRoute>
+                <BookingSession />
+              </ProtectedRoute>
+            </MainLayout>
+          } />
+          <Route path="/checkout" element={
+            <MainLayout>
+              <ProtectedRoute>
+                <Checkout />
+              </ProtectedRoute>
+            </MainLayout>
+          } />
+
+          {/* LOGIN (NO NAVBAR) */}
+          <Route path="/tutor-login" element={<TutorLogin />} />
+
+          {/* ADMIN (NO USER NAVBAR) */}
+          <Route path="/admin-login" element={<Login />} />
+
+          <Route path="/admin" element={
+            <AdminRoute>
+              <AdminDashboard />
+            </AdminRoute>
+          } />
+
+          <Route path="/complete-profile" element={
+            <MainLayout>
+              <ProtectedRoute>
+                <CompleteProfile />
+              </ProtectedRoute>
+            </MainLayout>
+          } />
+
+          <Route path="/tutor-profile" element={
+            <ProtectedRoute>
+              <TutorProfile />
+            </ProtectedRoute>
+          } />
+
+          <Route path="/student/profile" element={
+            <MainLayout>
+              <ProtectedRoute>
+                <StudentProfile />
+              </ProtectedRoute>
+            </MainLayout>
+          } />
+        </Routes>
+      </motion.div>
+    </AnimatePresence>
+  )
+}
+
 function App() {
   return (
     <BrowserRouter>
-
-      <Routes>
-
-        {/* USER ROUTES WITH LAYOUT */}
-
-        <Route path="/" element={
-          <MainLayout>
-            <PublicRoute>
-              <LandingPage />
-            </PublicRoute>
-          </MainLayout>
-        } />
-
-        <Route path="/auth" element={
-          <AuthLayout />
-        }>
-          <Route path="login" element={<LoginPage />} />
-          <Route path="signup" element={<SignupPage />} />
-        </Route>
-
-        <Route path="/student-register" element={
-          <MainLayout>
-            <StudentRegister />
-          </MainLayout>
-        } />
-
-        <Route path="/register-tutor" element={
-          <MainLayout>
-            <RegisterTutor />
-          </MainLayout>
-        } />
-
-        <Route path="/tutor-register" element={
-          <MainLayout>
-            <RegisterTutor />
-          </MainLayout>
-        } />
-
-        <Route path="/dashboard" element={
-          <ProtectedRoute>
-            <TutorDashboard />
-          </ProtectedRoute>
-        } />
-
-        <Route path="/tutor-dashboard" element={
-          <ProtectedRoute>
-            <TutorDashboard />
-          </ProtectedRoute>
-        } />
-
-        <Route path="/student-dashboard" element={
-          <ProtectedRoute>
-            <StudentDashboard />
-          </ProtectedRoute>
-        } />
-
-        <Route path="/student-dashboard/bookings" element={
-          <ProtectedRoute>
-            <StudentBookings />
-          </ProtectedRoute>
-        } />
-
-
-        <Route path="/dashboard/student/bookings" element={
-          <ProtectedRoute>
-            <StudentBookings />
-          </ProtectedRoute>
-        } />
-
-        <Route path="/dashboard/student" element={
-          <ProtectedRoute>
-            <StudentDashboard />
-          </ProtectedRoute>
-        } />
-
-        <Route path="/dashboard/tutor" element={
-          <ProtectedRoute>
-            <TutorDashboard />
-          </ProtectedRoute>
-        } />
-
-        <Route path="/tutor/schedule" element={
-          <MainLayout>
-            <ProtectedRoute>
-              <TutorSchedule />
-            </ProtectedRoute>
-          </MainLayout>
-        } />
-
-        <Route path="/my-applications" element={
-          <MainLayout>
-            <MyApplications />
-          </MainLayout>
-        } />
-
-        <Route path="/tutors" element={
-          <MainLayout>
-            <Tutors />
-          </MainLayout>
-        } />
-        <Route path="/tutors/:id" element={
-          <MainLayout>
-            <TutorDetails />
-          </MainLayout>
-        } />
-        <Route path="/messages/:id" element={
-          <MainLayout>
-            <ProtectedRoute>
-              <MessagePage />
-            </ProtectedRoute>
-          </MainLayout>
-        } />
-        <Route path="/booking/:id" element={
-          <MainLayout>
-            <ProtectedRoute>
-              <BookingSession />
-            </ProtectedRoute>
-          </MainLayout>
-        } />
-        <Route path="/checkout" element={
-          <MainLayout>
-            <ProtectedRoute>
-              <Checkout />
-            </ProtectedRoute>
-          </MainLayout>
-        } />
-
-        {/* LOGIN (NO NAVBAR) */}
-        <Route path="/tutor-login" element={<TutorLogin />} />
-
-        {/* ADMIN (NO USER NAVBAR) */}
-        <Route path="/admin-login" element={<Login />} />
-
-        <Route path="/admin" element={
-          <AdminRoute>
-            <AdminDashboard />
-          </AdminRoute>
-        } />
-
-        <Route path="/complete-profile" element={
-          <MainLayout>
-            <ProtectedRoute>
-              <CompleteProfile />
-            </ProtectedRoute>
-          </MainLayout>
-        } />
-
-        <Route path="/tutor-profile" element={
-          <ProtectedRoute>
-            <TutorProfile />
-          </ProtectedRoute>
-        } />
-
-        <Route path="/student/profile" element={
-          <MainLayout>
-            <ProtectedRoute>
-              <StudentProfile />
-            </ProtectedRoute>
-          </MainLayout>
-        } />
-
-        <Route path="/student/edit-profile" element={
-          <MainLayout>
-            <ProtectedRoute>
-              <EditProfile />
-            </ProtectedRoute>
-          </MainLayout>
-        } />
-
-       
-         
-
-      </Routes>
+      <AppRoutes />
     </BrowserRouter>
   )
 }

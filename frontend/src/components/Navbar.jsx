@@ -1,6 +1,7 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { GraduationCap, Menu, X } from "lucide-react";
+import { AnimatePresence, motion } from "framer-motion";
 import { useState } from "react";
+import { GraduationCap, Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth, dashboardPathFor } from "@/lib/auth";
 import { ProfileDropdown } from "@/components/ProfileDropdown";

@@ -1,4 +1,5 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
+import { useNavigate } from "react-router-dom";
 import { DashLayout } from "@/components/dash/DashLayout";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/Button";
