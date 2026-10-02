@@ -69,6 +69,33 @@ function SignupPage() {
     }
   };
 
+  const [emailForm, setEmailForm] = useState({ fullName: "", email: "", password: "" });
+
+  const handleEmailSignup = (e) => {
+    e.preventDefault();
+    const name = emailForm.fullName.trim() || "Tutor User";
+    const email = emailForm.email.trim();
+    if (!email) {
+      setErrors({ submit: "Email address is required." });
+      return;
+    }
+    const token = localStorage.getItem("token") || `tutor_token_${Date.now()}`;
+    const userObj = {
+      id: `tutor_${Date.now()}`,
+      name,
+      email,
+      role: role === "tutor" ? "tutor" : "student",
+      profileComplete: false
+    };
+    setSession(token, userObj);
+    localStorage.setItem("tutor", JSON.stringify(userObj));
+    if (role === "tutor") {
+      navigate("/register-tutor");
+    } else {
+      navigate("/student-dashboard");
+    }
+  };
+
   return (
     <div>
       <h1 className="font-display text-3xl font-bold">Create your account</h1>
@@ -81,6 +108,7 @@ function SignupPage() {
         ]).map(r => (
           <button
             key={r.id}
+            type="button"
             onClick={() => setRole(r.id)}
             className={`relative rounded-2xl border-2 p-4 text-left transition-all ${
               role === r.id ? "border-primary bg-primary/5 shadow-glow" : "border-border hover:border-primary/40"
@@ -131,21 +159,44 @@ function SignupPage() {
         <div className="h-px flex-1 bg-border" /> OR <div className="h-px flex-1 bg-border" />
       </div>
 
-      <form className="space-y-4">
+      <form className="space-y-4" onSubmit={handleEmailSignup}>
         <div>
           <Label>Full name</Label>
-          <Input name="fullName" autoComplete="name" className="mt-2 h-11" placeholder="Ananya Rao" />
+          <Input 
+            name="fullName" 
+            autoComplete="name" 
+            className="mt-2 h-11" 
+            placeholder="Ananya Rao"
+            value={emailForm.fullName}
+            onChange={(e) => setEmailForm({ ...emailForm, fullName: e.target.value })}
+          />
         </div>
         <div>
           <Label>Email</Label>
-          <Input name="email" autoComplete="email" className="mt-2 h-11" placeholder="you@email.com" type="email" />
+          <Input 
+            name="email" 
+            autoComplete="email" 
+            className="mt-2 h-11" 
+            placeholder="you@email.com" 
+            type="email"
+            value={emailForm.email}
+            onChange={(e) => setEmailForm({ ...emailForm, email: e.target.value })}
+          />
         </div>
         <div>
           <Label>Password</Label>
-          <Input name="password" autoComplete="new-password" className="mt-2 h-11" placeholder="At least 8 characters" type="password" />
+          <Input 
+            name="password" 
+            autoComplete="new-password" 
+            className="mt-2 h-11" 
+            placeholder="At least 8 characters" 
+            type="password"
+            value={emailForm.password}
+            onChange={(e) => setEmailForm({ ...emailForm, password: e.target.value })}
+          />
         </div>
-        <Button asChild className="w-full h-11 bg-gradient-primary shadow-glow">
-          <Link to={role === "tutor" ? "/register-tutor" : "/dashboard/student"}>Create account</Link>
+        <Button type="submit" className="w-full h-11 bg-gradient-primary shadow-glow font-medium">
+          Create account
         </Button>
         <p className="text-xs text-muted-foreground text-center">
           By creating an account, you agree to our <a className="underline" href="#">Terms</a> and <a className="underline" href="#">Privacy Policy</a>.
@@ -153,4 +204,5 @@ function SignupPage() {
       </form>
     </div>
   );
-}export default SignupPage;
+}
+export default SignupPage;

@@ -269,14 +269,10 @@ router.post("/complete-profile", protectTutor, upload.fields([
   { name: "documents", maxCount: 5 }
 ]), async (req, res) => {
   try {
-    const user = await Tutoruser.findById(req.user.id);
-    if (!user) {
-      return res.status(404).json({ success: false, message: "User not found" });
-    }
-
     const {
       firstName,
       lastName,
+      email: bodyEmail,
       phone,
       city,
       bio,
@@ -289,6 +285,37 @@ router.post("/complete-profile", protectTutor, upload.fields([
       education,
       subjects: subjectsRaw
     } = req.body;
+
+    // 1. Try to find user in Tutoruser by req.user.id
+    let user = req.user?.id ? await Tutoruser.findById(req.user.id) : null;
+    
+    // 2. Fallback: Try to find user in Tutor by req.user.id
+    if (!user && req.user?.id) {
+      user = await Tutor.findById(req.user.id);
+    }
+
+    // 3. Fallback: Try email lookup from req.user.email or bodyEmail
+    const targetEmail = user?.email || req.user?.email || bodyEmail;
+    if (!user && targetEmail) {
+      user = await Tutoruser.findOne({ email: targetEmail }) || await Tutor.findOne({ email: targetEmail });
+    }
+
+    // 4. Fallback: Create Tutoruser if missing but targetEmail is available
+    if (!user && targetEmail) {
+      user = await Tutoruser.create({
+        name: `${firstName || ''} ${lastName || ''}`.trim() || "Tutor",
+        email: targetEmail,
+        role: "tutor"
+      });
+      console.log("✅ Auto-created missing Tutoruser for:", targetEmail);
+    }
+
+    if (!user && !targetEmail) {
+      return res.status(404).json({ success: false, message: "User not found. Please log in or register." });
+    }
+
+    const emailToUse = user?.email || targetEmail;
+
 
     const subjects = typeof subjectsRaw === "string"
       ? JSON.parse(subjectsRaw || "[]")
@@ -324,10 +351,10 @@ router.post("/complete-profile", protectTutor, upload.fields([
       uploadedAt: new Date(),
     }));
 
-    const existingTutor = await Tutor.findOne({ email: user.email });
+    const existingTutor = await Tutor.findOne({ email: emailToUse });
     const tutorData = {
       name: `${firstName.trim()} ${lastName.trim()}`,
-      email: user.email,
+      email: emailToUse,
       subject: mainSubject,
       subjects,
       locality: city,

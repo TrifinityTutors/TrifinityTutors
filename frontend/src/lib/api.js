@@ -1,4 +1,4 @@
-export const API_BASE = import.meta.env.VITE_API_BASE_URL || (import.meta.env.DEV ? 'http://localhost:5000' : 'https://trifinitytutors-backend.onrender.com')
+export const API_BASE = import.meta.env.VITE_API_BASE_URL || (import.meta.env.DEV ? 'http://localhost:5001' : 'https://trifinitytutors-backend.onrender.com')
 
 export function apiUrl(path) {
   if (!path) return API_BASE

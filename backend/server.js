@@ -49,7 +49,9 @@ app.use("/api/auth", require("./routes/auth"));
 app.use("/api/bookings", bookingRoutes);
 app.use("/api/notifications", notificationRoutes);
 
+const PORT = process.env.PORT || 5001;
+
 // Switch from app.listen to httpServer.listen
-httpServer.listen(5000, () => {
-  console.log("Server running on port 5000");
+httpServer.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
 });

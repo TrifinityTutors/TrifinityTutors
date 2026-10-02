@@ -55,7 +55,7 @@ function RegisterTutorPage() {
   const [documents, setDocuments] = useState([]);
 
   useEffect(() => {
-    const tutorData = localStorage.getItem("tutor");
+    const tutorData = localStorage.getItem("tutor") || localStorage.getItem("user");
     if (tutorData) {
       try {
         const tutor = JSON.parse(tutorData);
@@ -173,6 +173,7 @@ function RegisterTutorPage() {
       const payload = new FormData();
       payload.append("firstName", form.firstName.trim());
       payload.append("lastName", form.lastName.trim());
+      payload.append("email", form.email.trim());
       payload.append("phone", form.phone.trim());
       payload.append("city", form.city.trim());
       payload.append("bio", form.bio.trim());
