@@ -173,34 +173,80 @@ export default function Verifications() {
                       </div>
                     )}
 
+                    {/* 🤖 Automated CV Verification AI Panel */}
+                    {tutor.cvAnalysis && (
+                      <div className="ai-verification-box" style={{
+                        marginTop: "12px",
+                        padding: "10px",
+                        borderRadius: "8px",
+                        backgroundColor: tutor.cvAnalysis.confidenceScore >= 80 ? "#f0fdf4" : "#fffbeb",
+                        border: `1px solid ${tutor.cvAnalysis.confidenceScore >= 80 ? "#bbf7d0" : "#fef3c7"}`
+                      }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "6px" }}>
+                          <span style={{ fontSize: "12px", fontWeight: "bold", color: "#1e293b" }}>🤖 AI Verification Score</span>
+                          <span style={{
+                            fontSize: "11px",
+                            fontWeight: "bold",
+                            padding: "2px 8px",
+                            borderRadius: "12px",
+                            backgroundColor: tutor.cvAnalysis.confidenceScore >= 80 ? "#22c55e" : "#f59e0b",
+                            color: "#ffffff"
+                          }}>
+                            {tutor.cvAnalysis.confidenceScore}% ({tutor.cvAnalysis.autoDecision === "AUTO_APPROVED" ? "Auto Approved" : "Flagged"})
+                          </span>
+                        </div>
+
+                        {tutor.cvAnalysis.extractedData && (
+                          <div style={{ fontSize: "11px", color: "#475569", lineHeight: "1.4" }}>
+                            <div>🎓 <strong>Degree:</strong> {tutor.cvAnalysis.extractedData.degree || "N/A"}</div>
+                            <div>🏛️ <strong>University:</strong> {tutor.cvAnalysis.extractedData.university || "N/A"}</div>
+                            {tutor.cvAnalysis.extractedData.skills?.length > 0 && (
+                              <div>⚡ <strong>Skills:</strong> {tutor.cvAnalysis.extractedData.skills.slice(0, 4).join(", ")}</div>
+                            )}
+                          </div>
+                        )}
+
+                        {tutor.cvAnalysis.suspiciousFlags?.length > 0 && (
+                          <div style={{ marginTop: "6px", fontSize: "11px", color: "#dc2626", fontWeight: "bold" }}>
+                            ⚠️ Flags: {tutor.cvAnalysis.suspiciousFlags.join("; ")}
+                          </div>
+                        )}
+                      </div>
+                    )}
+
                     {tutor.cvFile && (
-                      <div className="cv-info">
+                      <div className="cv-info" style={{ marginTop: "10px" }}>
                         <a
                           href={apiUrl(`/api/tutors/download-cv/${tutor._id}`)}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="cv-link"
                         >
-                          📄 View CV
+                          📄 View CV Document
                         </a>
                       </div>
                     )}
 
                     <p className="uploaded-date">
-                      Uploaded: {new Date(tutor.cvUploadedAt).toLocaleDateString()}
+                      Uploaded: {tutor.cvUploadedAt ? new Date(tutor.cvUploadedAt).toLocaleDateString() : "N/A"}
                     </p>
                   </div>
 
-                  {tutor.verificationStatus === "pending" && (
-                    <div className="card-actions">
-                      <button
-                        className="btn-approve"
-                        onClick={() => setSelectedTutor(tutor._id)}
-                      >
-                        ✓ Review
-                      </button>
-                    </div>
-                  )}
+                  <div className="card-actions" style={{ display: "flex", gap: "8px" }}>
+                    <button
+                      className="btn-approve"
+                      onClick={() => {
+                        setSelectedTutor(tutor._id);
+                        if (tutor.verificationNotes) {
+                          setVerificationNotes(tutor.verificationNotes);
+                        } else if (tutor.cvAnalysis) {
+                          setVerificationNotes(`AI Confidence Score: ${tutor.cvAnalysis.confidenceScore}%. Decision: ${tutor.cvAnalysis.autoDecision}`);
+                        }
+                      }}
+                    >
+                      ✓ Review & Decide
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>

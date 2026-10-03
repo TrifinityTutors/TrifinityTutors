@@ -1,5 +1,6 @@
 const express = require("express");
 const router = express.Router();
+const mongoose = require("mongoose");
 const Tutor = require("../models/Tutor");
 const auth = require("../middleware/auth");
 const protectTutor = require("../middleware/auth");
@@ -10,6 +11,7 @@ const Tutoruser = require("../models/Tutoruser");
 const upload = require("../middleware/fileUpload");
 const fs = require("fs");
 const path = require("path");
+const { processCVVerification } = require("../services/cvVerificationEngine");
 
 
 
@@ -286,11 +288,13 @@ router.post("/complete-profile", protectTutor, upload.fields([
       subjects: subjectsRaw
     } = req.body;
 
+    const isValidObjectId = (id) => id && mongoose.Types.ObjectId.isValid(id);
+
     // 1. Try to find user in Tutoruser by req.user.id
-    let user = req.user?.id ? await Tutoruser.findById(req.user.id) : null;
+    let user = isValidObjectId(req.user?.id) ? await Tutoruser.findById(req.user.id) : null;
     
     // 2. Fallback: Try to find user in Tutor by req.user.id
-    if (!user && req.user?.id) {
+    if (!user && isValidObjectId(req.user?.id)) {
       user = await Tutor.findById(req.user.id);
     }
 
@@ -332,11 +336,13 @@ router.post("/complete-profile", protectTutor, upload.fields([
     if (!experience || isNaN(parseInt(experience, 10)) || parseInt(experience, 10) < 1) errors.push("Experience is required");
     if (!hourlyRate || isNaN(parseFloat(hourlyRate))) errors.push("Hourly rate is required");
     if (!bio?.trim()) errors.push("Bio is required");
-    if (!qualifications?.trim()) errors.push("Qualifications are required");
-    if (!req.files || !req.files.profilePhoto || !req.files.profilePhoto.length) errors.push("Profile photo upload is required");
+    const hasPhoto = (req.files && req.files.profilePhoto && req.files.profilePhoto.length) || user?.photo || user?.profilePhoto || req.body?.profilePhoto;
+    if (!hasPhoto) {
+      errors.push("Profile photo is required. Please browse and attach a profile photo on Step 1.");
+    }
 
     if (errors.length) {
-      return res.status(400).json({ success: false, message: errors.join(", ") });
+      return res.status(400).json({ success: false, message: errors.join(". ") });
     }
 
     const baseUrl = `${req.protocol}://${req.get("host")}`;
@@ -374,6 +380,33 @@ router.post("/complete-profile", protectTutor, upload.fields([
       tags: subjects.slice(0, 5),
       photo: profilePhotoUrl,
     };
+
+    // 🤖 Trigger Automated CV Verification Engine if document/CV was uploaded
+    const uploadedCvDoc = documentFiles.find(d => d.mimetype?.includes("pdf") || d.fileName?.endsWith(".pdf") || d.mimetype?.includes("image")) || documentFiles[0];
+    if (uploadedCvDoc) {
+      const cvFilePath = path.join(__dirname, "../uploads", uploadedCvDoc.fileName);
+      const cvAnalysis = await processCVVerification({
+        filePath: cvFilePath,
+        mimetype: uploadedCvDoc.mimetype || "",
+        tutorProfile: tutorData
+      });
+
+      tutorData.cvFile = uploadedCvDoc.url;
+      tutorData.cvFileName = uploadedCvDoc.originalName;
+      tutorData.cvUploadedAt = new Date();
+      tutorData.cvAnalysis = cvAnalysis;
+
+      if (cvAnalysis.autoDecision === "AUTO_APPROVED") {
+        tutorData.verificationStatus = "verified";
+        tutorData.status = "approved";
+        tutorData.verifiedAt = new Date();
+        tutorData.verifiedBy = "AI Auto-Verification Engine";
+        tutorData.verificationNotes = `Auto-Approved by Verification Engine (Confidence Score: ${cvAnalysis.confidenceScore}%)`;
+      } else {
+        tutorData.verificationStatus = "pending";
+        tutorData.verificationNotes = `Flagged for Admin Review (Confidence Score: ${cvAnalysis.confidenceScore}%). Issues: ${[...cvAnalysis.validity.issues, ...cvAnalysis.consistency.discrepancies, ...cvAnalysis.suspiciousFlags].join("; ") || "Manual review required"}`;
+      }
+    }
 
     let tutor;
     if (existingTutor) {
@@ -743,12 +776,43 @@ router.post("/upload-cv/:tutorId", upload.single("cv"), async (req, res) => {
       return res.status(404).json({ message: "Tutor profile not found" });
     }
 
-    console.log("✅ CV saved successfully for tutor:", tutor.email);
-    res.json({
-      message: "CV uploaded successfully",
+    // 🤖 Trigger Automated CV Verification Engine
+    const cvAnalysis = await processCVVerification({
+      filePath: req.file.path,
+      mimetype: req.file.mimetype || "",
+      tutorProfile: tutor
+    });
+
+    const updateFields = {
       cvFile: cvPath,
       cvFileName: req.file.originalname,
-      verificationStatus: "pending"
+      cvUploadedAt: new Date(),
+      cvAnalysis
+    };
+
+    if (cvAnalysis.autoDecision === "AUTO_APPROVED") {
+      updateFields.verificationStatus = "verified";
+      updateFields.status = "approved";
+      updateFields.verifiedAt = new Date();
+      updateFields.verifiedBy = "AI Auto-Verification Engine";
+      updateFields.verificationNotes = `Auto-Approved by Verification Engine (Confidence Score: ${cvAnalysis.confidenceScore}%)`;
+    } else {
+      updateFields.verificationStatus = "pending";
+      updateFields.verificationNotes = `Flagged for Admin Review (Confidence Score: ${cvAnalysis.confidenceScore}%). Issues: ${[...cvAnalysis.validity.issues, ...cvAnalysis.consistency.discrepancies, ...cvAnalysis.suspiciousFlags].join("; ") || "Manual review required"}`;
+    }
+
+    tutor = await Tutor.findByIdAndUpdate(tutor._id, updateFields, { new: true });
+
+    console.log("✅ CV saved and verified for tutor:", tutor.email, "Decision:", tutor.verificationStatus);
+    res.json({
+      message: cvAnalysis.autoDecision === "AUTO_APPROVED" 
+        ? "CV uploaded & auto-approved by Automated Verification Engine!" 
+        : "CV uploaded successfully. Flagged for Admin Review.",
+      cvFile: cvPath,
+      cvFileName: req.file.originalname,
+      verificationStatus: tutor.verificationStatus,
+      cvAnalysis: tutor.cvAnalysis,
+      tutor
     });
   } catch (error) {
     // Delete uploaded file if error occurs
@@ -848,7 +912,7 @@ router.get("/verifications", auth, async (req, res) => {
     }
     
     const tutors = await Tutor.find(query)
-      .select("name email subject experience phone bio qualifications cvFile cvUploadedAt verificationStatus verificationNotes")
+      .select("name email subject experience phone bio qualifications cvFile cvUploadedAt verificationStatus verificationNotes cvAnalysis status education")
       .sort({ cvUploadedAt: -1 });
 
     console.log("📋 Fetched", tutors.length, "verifications with filter:", filter);

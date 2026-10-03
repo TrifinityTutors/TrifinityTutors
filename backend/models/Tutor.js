@@ -53,6 +53,32 @@ const tutorSchema = new mongoose.Schema({
   verificationNotes: { type: String, default: "" },
   verifiedBy: { type: String, default: "" }, // Admin ID who verified
 
+  // Automated CV Verification Analysis
+  cvAnalysis: {
+    extractedText: { type: String, default: "" },
+    extractedData: {
+      name: { type: String, default: "" },
+      degree: { type: String, default: "" },
+      university: { type: String, default: "" },
+      skills: { type: [String], default: [] },
+      experience: { type: String, default: "" },
+      certifications: { type: [String], default: [] }
+    },
+    validity: {
+      isValid: { type: Boolean, default: true },
+      issues: { type: [String], default: [] }
+    },
+    consistency: {
+      isConsistent: { type: Boolean, default: true },
+      matchScore: { type: Number, default: 0 },
+      discrepancies: { type: [String], default: [] }
+    },
+    suspiciousFlags: { type: [String], default: [] },
+    confidenceScore: { type: Number, default: 0 }, // 0 to 100
+    autoDecision: { type: String, enum: ["AUTO_APPROVED", "FLAGGED_FOR_ADMIN", "PENDING", ""], default: "" },
+    analyzedAt: Date
+  },
+
   // 🔥 ADD THESE (for Google + flow)
   googleId: String,
   photo: String,

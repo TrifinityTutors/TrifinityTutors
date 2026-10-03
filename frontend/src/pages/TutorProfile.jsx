@@ -663,6 +663,84 @@ function TutorProfile() {
             </p>
           )}
         </Card>
+
+        {/* 🤖 Automated CV Verification Engine Analysis Card */}
+        {tutor?.cvAnalysis?.confidenceScore !== undefined && (
+          <Card className="mt-6 rounded-2xl p-6 border-blue-200 dark:border-blue-900 bg-gradient-to-br from-blue-50/50 to-indigo-50/30 dark:from-blue-950/20 dark:to-indigo-950/20 shadow-sm">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <span className="text-xl">🤖</span>
+                <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100">Automated CV Verification Analysis</h3>
+              </div>
+              <span className={`px-3 py-1 rounded-full text-xs font-bold ${
+                tutor.cvAnalysis.autoDecision === "AUTO_APPROVED"
+                  ? "bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300"
+                  : "bg-amber-100 text-amber-800 dark:bg-amber-900/50 dark:text-amber-300"
+              }`}>
+                {tutor.cvAnalysis.autoDecision === "AUTO_APPROVED" ? "✓ AUTO APPROVED" : "⚠️ FLAGGED FOR ADMIN REVIEW"}
+              </span>
+            </div>
+
+            {/* Confidence Score Bar */}
+            <div className="mb-6">
+              <div className="flex justify-between items-center text-xs font-semibold mb-1.5">
+                <span>AI Confidence & Match Score</span>
+                <span className="font-bold text-blue-700 dark:text-blue-400">{tutor.cvAnalysis.confidenceScore}%</span>
+              </div>
+              <div className="h-2.5 w-full bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden">
+                <div 
+                  className={`h-full transition-all duration-500 ${
+                    tutor.cvAnalysis.confidenceScore >= 80 ? "bg-green-500" : tutor.cvAnalysis.confidenceScore >= 50 ? "bg-amber-500" : "bg-red-500"
+                  }`} 
+                  style={{ width: `${tutor.cvAnalysis.confidenceScore}%` }}
+                />
+              </div>
+            </div>
+
+            {/* NLP Extracted Entities Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
+              <div className="bg-white dark:bg-slate-900/80 p-3 rounded-xl border border-slate-200 dark:border-slate-800">
+                <div className="text-[11px] font-semibold text-slate-500 uppercase">🎓 Extracted Degree</div>
+                <div className="text-sm font-medium text-slate-800 dark:text-slate-200 mt-0.5">{tutor.cvAnalysis.extractedData?.degree || "Not found"}</div>
+              </div>
+              <div className="bg-white dark:bg-slate-900/80 p-3 rounded-xl border border-slate-200 dark:border-slate-800">
+                <div className="text-[11px] font-semibold text-slate-500 uppercase">🏛️ Institution</div>
+                <div className="text-sm font-medium text-slate-800 dark:text-slate-200 mt-0.5">{tutor.cvAnalysis.extractedData?.university || "Not found"}</div>
+              </div>
+              <div className="bg-white dark:bg-slate-900/80 p-3 rounded-xl border border-slate-200 dark:border-slate-800">
+                <div className="text-[11px] font-semibold text-slate-500 uppercase">⌛ Experience Claimed</div>
+                <div className="text-sm font-medium text-slate-800 dark:text-slate-200 mt-0.5">{tutor.cvAnalysis.extractedData?.experience || "Not found"}</div>
+              </div>
+            </div>
+
+            {/* Extracted Skills */}
+            <div className="space-y-3">
+              {tutor.cvAnalysis.extractedData?.skills?.length > 0 && (
+                <div>
+                  <span className="text-xs font-semibold text-slate-500 block mb-1">⚡ Extracted Skills</span>
+                  <div className="flex flex-wrap gap-1.5">
+                    {tutor.cvAnalysis.extractedData.skills.map((skill, i) => (
+                      <span key={i} className="px-2.5 py-0.5 bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 text-xs font-medium rounded-md">
+                        {skill}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Verification Flags */}
+            {(tutor.cvAnalysis.suspiciousFlags?.length > 0 || tutor.cvAnalysis.consistency?.discrepancies?.length > 0) && (
+              <div className="mt-4 p-3 bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900 rounded-xl">
+                <div className="text-xs font-bold text-red-800 dark:text-red-300 mb-1">⚠️ Verification Flags</div>
+                <ul className="text-xs text-red-700 dark:text-red-400 list-disc list-inside space-y-0.5">
+                  {tutor.cvAnalysis.suspiciousFlags?.map((flag, idx) => <li key={`f-${idx}`}>{flag}</li>)}
+                  {tutor.cvAnalysis.consistency?.discrepancies?.map((disc, idx) => <li key={`d-${idx}`}>{disc}</li>)}
+                </ul>
+              </div>
+            )}
+          </Card>
+        )}
       </div>
     </DashLayout>
   )
