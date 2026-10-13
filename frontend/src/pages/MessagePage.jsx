@@ -1,4 +1,5 @@
-﻿import axios from "axios";
+import axios from "axios";
+import { apiUrl } from "@/lib/api";
 import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft, Lock, Search, Send, MessageCircle } from "lucide-react";
@@ -63,7 +64,7 @@ function MessagePage() {
     const loadTutor = async () => {
       setLoadingTutor(true);
       try {
-        const response = await axios.get(`/api/tutors/profile/${id}`);
+        const response = await axios.get(apiUrl(`/api/tutors/profile/${id}`));
         setTutor(response?.data || null);
       } catch (error) {
         console.error("Failed to load tutor profile", error);

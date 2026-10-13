@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
+import { apiUrl } from "@/lib/api";
 import { ArrowLeft, Star, MapPin, MessageSquare, Calendar, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/Card";
@@ -52,7 +53,7 @@ function TutorDetails() {
     const fetchTutor = async () => {
       try {
         setLoading(true);
-        const response = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/tutors/profile/${id}`);
+        const response = await axios.get(apiUrl(`/api/tutors/profile/${id}`));
         setTutor(response.data);
         setError("");
       } catch (err) {

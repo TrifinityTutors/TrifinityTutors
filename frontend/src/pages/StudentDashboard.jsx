@@ -1,4 +1,4 @@
-﻿import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { io as ioClient } from "socket.io-client";
 import { useAuth } from "@/lib/auth";
@@ -112,7 +112,7 @@ function StudentDashboard() {
   }, [loadBookings]);
 
   useEffect(() => {
-    const socket = ioClient(API_BASE, { transports: ["websocket"] });
+    const socket = ioClient(API_BASE, { transports: ["websocket", "polling"] });
     socketRef.current = socket;
 
     const userObj = JSON.parse(localStorage.getItem("user") || "{}") || {};

@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
+import { apiFetch } from "./api";
 
 const AuthContext = createContext();
 
@@ -74,7 +75,7 @@ export function AuthProvider({ children }) {
           ? `/api/tutors/profile/${storedUser.id || storedUser._id}`
           : "/api/students/me";
 
-        const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}${endpoint}`, {
+        const res = await apiFetch(endpoint, {
           headers: { Authorization: `Bearer ${storedToken}` },
         });
 
@@ -129,7 +130,7 @@ export function AuthProvider({ children }) {
         ? `/api/tutors/profile/${storedUser.id || storedUser._id}`
         : "/api/students/me";
 
-      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}${endpoint}`, {
+      const res = await apiFetch(endpoint, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (!res.ok) return null;

@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react"
 import { useLocation, useNavigate } from "react-router-dom"
 import axios from "axios"
+import { apiUrl } from "@/lib/api"
 import { useAuth } from "@/lib/auth"
 import { DashLayout } from "@/components/dash/DashLayout"
 import { Card } from "@/components/ui/Card"
@@ -79,7 +80,7 @@ function TutorProfile() {
       }
 
       const response = await axios.get(
-        `${import.meta.env.VITE_API_BASE_URL}/api/tutors/profile/${tutorData._id}`,
+        apiUrl(`/api/tutors/profile/${tutorData._id}`),
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -178,7 +179,7 @@ function TutorProfile() {
         })
 
         response = await axios.put(
-          `${import.meta.env.VITE_API_BASE_URL}/api/tutors/profile/${tutorData._id}`,
+          apiUrl(`/api/tutors/profile/${tutorData._id}`),
           submitForm,
           {
             headers: {
@@ -189,7 +190,7 @@ function TutorProfile() {
         )
       } else {
         response = await axios.put(
-          `${import.meta.env.VITE_API_BASE_URL}/api/tutors/profile/${tutorData._id}`,
+          apiUrl(`/api/tutors/profile/${tutorData._id}`),
           formData,
           {
             headers: {
@@ -235,7 +236,7 @@ function TutorProfile() {
       formDataWithFile.append("cv", cvFile)
 
       const response = await axios.post(
-        `${import.meta.env.VITE_API_BASE_URL}/api/tutors/upload-cv/${tutorData._id}`,
+        apiUrl(`/api/tutors/upload-cv/${tutorData._id}`),
         formDataWithFile,
         {
           headers: {
@@ -273,7 +274,7 @@ function TutorProfile() {
 
       const tutorData = authUser || JSON.parse(localStorage.getItem("tutor"))
       const response = await axios.post(
-        `${import.meta.env.VITE_API_BASE_URL}/api/tutors/request-verification/${tutorData._id}`,
+        apiUrl(`/api/tutors/request-verification/${tutorData._id}`),
         {
           bio: formData.bio,
           qualifications: formData.qualifications,
@@ -299,7 +300,7 @@ function TutorProfile() {
     if (tutor?.cvFile) {
       const tutorData = authUser || JSON.parse(localStorage.getItem("tutor"))
       window.open(
-        `${import.meta.env.VITE_API_BASE_URL}/api/tutors/download-cv/${tutorData._id}`,
+        apiUrl(`/api/tutors/download-cv/${tutorData._id}`),
         "_blank"
       )
     }

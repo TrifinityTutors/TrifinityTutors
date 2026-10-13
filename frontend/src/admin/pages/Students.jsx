@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import Sidebar from "../components/Sidebar";
+import { apiFetch } from "@/lib/api";
 import "../styles/AdminStudents.css"
 
 export default function Students() {
@@ -12,7 +13,7 @@ export default function Students() {
 
   const fetchStudents = async () => {
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/students/with-applications`, {
+      const res = await apiFetch('/api/students/with-applications', {
         headers: {
           Authorization: localStorage.getItem("token")
         }
@@ -30,7 +31,7 @@ export default function Students() {
   const deleteStudent = async (id) => {
     if (!window.confirm("Are you sure you want to delete this student?")) return;
 
-    await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/students/${id}`, {
+    await apiFetch(`/api/students/${id}`, {
       method: "DELETE",
       headers: {
         Authorization: localStorage.getItem("token")
@@ -41,7 +42,7 @@ export default function Students() {
   };
 
   const addStudent = async () => {
-    await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/students/student`, {
+    await apiFetch('/api/students/student', {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
@@ -62,7 +63,7 @@ export default function Students() {
 
   const approveTutor = async (id) => {
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/students/approve/${id}`, {
+      const response = await apiFetch(`/api/students/approve/${id}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -86,7 +87,7 @@ export default function Students() {
 
   const rejectTutor = async (id) => {
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/students/reject/${id}`, {
+      const response = await apiFetch(`/api/students/reject/${id}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",

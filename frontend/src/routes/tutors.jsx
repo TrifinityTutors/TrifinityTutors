@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState, useEffect } from "react";
 import axios from "axios";
+import { apiUrl } from "@/lib/api";
 import { Search, MapPin, Star, Heart, ArrowRight, Filter, SlidersHorizontal } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/Input";
@@ -32,7 +33,7 @@ function TutorsPage() {
     let mounted = true;
     (async () => {
       try {
-        const res = await axios.get("/api/tutors");
+        const res = await axios.get(apiUrl("/api/tutors"));
         if (!mounted) return;
         const data = (res.data || []).map((t, i) => ({
           // normalize to the fields the UI expects

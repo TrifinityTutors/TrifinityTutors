@@ -1,6 +1,7 @@
-﻿import { useState } from "react"
+import { useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { GoogleLogin } from "@react-oauth/google"
+import { apiFetch } from "@/lib/api"
 import "./StudentRegister.css"
 
 function StudentRegister() {
@@ -26,7 +27,7 @@ function StudentRegister() {
     try {
       console.log("Google signup for student initiated");
       // Google login creates/authenticates student
-      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/students/google-signup`, {
+      const response = await apiFetch('/api/students/google-signup', {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ token: credentialResponse.credential })
@@ -61,7 +62,7 @@ function StudentRegister() {
     setIsLoading(true)
 
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/students/student`, {
+      const response = await apiFetch('/api/students/student', {
         method: "POST",
         headers: {
           "Content-Type": "application/json"

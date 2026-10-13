@@ -1,4 +1,14 @@
 {
+  "name": "trifinity-tutors",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "start": "cd backend && node server.js",
+    "build": "cd frontend && npm install && npm run build && cd ../backend && npm install",
+    "build:frontend": "cd frontend && npm install && npm run build",
+    "build:backend": "cd backend && npm install",
+    "start:backend": "cd backend && node server.js"
+  },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.98.0"
   }

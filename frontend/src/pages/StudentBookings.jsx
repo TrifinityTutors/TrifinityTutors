@@ -6,6 +6,7 @@ import { DashboardShell } from "@/components/DashboardShell";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/button";
+import { apiFetch } from "@/lib/api";
 
 const nav = [
   { to: "/dashboard/student", label: "Overview", icon: LayoutDashboard },
@@ -72,7 +73,7 @@ function StudentBookings() {
     try {
       setLoading(true);
       const token = localStorage.getItem("token");
-      const res = await fetch("/api/bookings/student", {
+      const res = await apiFetch("/api/bookings/student", {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (!res.ok) throw new Error("Failed to fetch bookings");
@@ -94,7 +95,7 @@ function StudentBookings() {
     if (!window.confirm("Cancel this booking?")) return;
     try {
       const token = localStorage.getItem("token");
-      const res = await fetch(`/api/bookings/${bookingId}/cancel`, {
+      const res = await apiFetch(`/api/bookings/${bookingId}/cancel`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",

@@ -1,4 +1,4 @@
-﻿import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { io as ioClient } from "socket.io-client";
 import { LayoutDashboard, Calendar, Users, DollarSign, BarChart3, Settings, MessageCircle, TrendingUp, Eye, Star, Bell } from "lucide-react";
@@ -67,7 +67,7 @@ function TutorDashboard() {
   }, [user, navigate]);
 
   useEffect(() => {
-    const socket = ioClient(API_BASE, { transports: ["websocket"] });
+    const socket = ioClient(API_BASE, { transports: ["websocket", "polling"] });
     socketRef.current = socket;
 
     const user = JSON.parse(localStorage.getItem("user") || "{}") || {};

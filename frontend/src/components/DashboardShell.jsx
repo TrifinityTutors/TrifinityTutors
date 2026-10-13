@@ -60,7 +60,7 @@ export function DashboardShell({ children, navItems, title, role }) {
         const token = localStorage.getItem('token');
         if (!token) return;
 
-        socketRef.current = ioClient(API_BASE, { transports: ['websocket'] });
+        socketRef.current = ioClient(API_BASE, { transports: ['websocket', 'polling'] });
 
         const userId = currentUser?._id || currentUser?.id || currentUser?.userId;
         if (userId) {
@@ -216,7 +216,7 @@ export function DashboardShell({ children, navItems, title, role }) {
                       setShowNotifications((s) => !s);
                       const token = localStorage.getItem('token');
                       if (!token) return;
-                      const res = await fetch('/api/notifications', { headers: { Authorization: `Bearer ${token}` } });
+                      const res = await apiFetch('/api/notifications', { headers: { Authorization: `Bearer ${token}` } });
                       if (!res.ok) return;
                       const data = await res.json();
                       setUnreadCount(data.unreadCount || 0);
@@ -238,7 +238,7 @@ export function DashboardShell({ children, navItems, title, role }) {
                         <button className="text-xs text-slate-500" onClick={async () => {
                           try {
                             const token = localStorage.getItem('token');
-                            const res = await fetch('/api/notifications/mark-all-read', { method: 'PUT', headers: { Authorization: `Bearer ${token}` } });
+                            const res = await apiFetch('/api/notifications/mark-all-read', { method: 'PUT', headers: { Authorization: `Bearer ${token}` } });
                             if (res.ok) {
                               setNotifications((n) => n.map(x => ({ ...x, isRead: true })));
                               setUnreadCount(0);
@@ -266,7 +266,7 @@ export function DashboardShell({ children, navItems, title, role }) {
                                   <button className="text-xs text-blue-600" onClick={async () => {
                                     try {
                                       const token = localStorage.getItem('token');
-                                      const res = await fetch(`/api/notifications/${n._id}/read`, { method: 'PUT', headers: { Authorization: `Bearer ${token}` } });
+                                      const res = await apiFetch(`/api/notifications/${n._id}/read`, { method: 'PUT', headers: { Authorization: `Bearer ${token}` } });
                                       if (!res.ok) throw new Error('Failed');
                                       const data = await res.json();
                                       setNotifications((prev) => prev.map(x => x._id === n._id ? data.notification : x));

@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react"
+import { apiFetch } from "@/lib/api"
 import "./StudentCard.css"
 
 function StudentCard({ data }) {
@@ -19,7 +20,7 @@ function StudentCard({ data }) {
     try {
       // We'll check by trying to fetch and seeing if an application exists
       // This is called by comparing with applications
-      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/students/tutor/${tutor._id}`)
+      const response = await apiFetch(`/api/students/tutor/${tutor._id}`)
       const applications = await response.json()
       
       // Check if this student already has an application from this tutor
@@ -70,7 +71,7 @@ function StudentCard({ data }) {
       
       console.log("📤 Sending apply request with:", payloadData);
 
-      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/students/apply`, {
+      const response = await apiFetch('/api/students/apply', {
         method: "POST",
         headers: {
           "Content-Type": "application/json"

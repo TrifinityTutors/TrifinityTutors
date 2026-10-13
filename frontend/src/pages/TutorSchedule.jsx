@@ -60,7 +60,7 @@ export default function TutorSchedule() {
   }, []);
 
   useEffect(() => {
-    const socket = ioClient(API_BASE, { transports: ["websocket"] });
+    const socket = ioClient(API_BASE, { transports: ["websocket", "polling"] });
     socketRef.current = socket;
     const userId = user?._id || user?.id || user?.userId;
     if (userId) {

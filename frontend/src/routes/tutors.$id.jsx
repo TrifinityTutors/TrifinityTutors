@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import axios from "axios";
+import { apiUrl } from "@/lib/api";
 import { Star, MapPin, Calendar, MessageCircle, Award, Clock, GraduationCap, Languages, CheckCircle2, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/Card";
@@ -20,7 +21,7 @@ function TutorProfilePage() {
     let mounted = true;
     (async () => {
       try {
-        const res = await axios.get(`/api/tutors/profile/${id}`);
+        const res = await axios.get(apiUrl(`/api/tutors/profile/${id}`));
         if (!mounted) return;
         setTutor(res.data);
       } catch (err) {
