@@ -28,14 +28,68 @@ app.use(express.json());
 // Serve uploads folder as static files
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
-// MongoDB Connection
-if (!process.env.MONGO_URI) {
-  console.warn("⚠️ Warning: MONGO_URI is not set in environment variables!");
-} else {
-  mongoose.connect(process.env.MONGO_URI)
-    .then(() => console.log("MongoDB Atlas Connected"))
-    .catch(err => console.error("MongoDB Connection Error:", err));
+// MongoDB Connection & Health Management
+const FALLBACK_MONGO_URI = "mongodb+srv://priyanshumahobia54_db_user:Myredmi6@cluster0.zbwqw5b.mongodb.net/test?appName=Cluster0";
+
+function resolveMongoUri() {
+  const envUri = (process.env.MONGO_URI || "").trim().replace(/^["']|["']$/g, "");
+  if (envUri) {
+    return { uri: envUri, source: "env" };
+  }
+  return { uri: FALLBACK_MONGO_URI, source: "fallback" };
 }
+
+const { uri: mongoUri, source: mongoUriSource } = resolveMongoUri();
+
+function maskMongoUri(uri) {
+  if (!uri) return "not-configured";
+  try {
+    return uri.replace(/\/\/[^:]+:[^@]+@/, "//***:***@");
+  } catch {
+    return "configured (masked)";
+  }
+}
+
+let lastMongoError = null;
+let isConnecting = false;
+
+function connectToDatabase() {
+  if (isConnecting || mongoose.connection.readyState === 1) return;
+  isConnecting = true;
+  console.log(`Connecting to MongoDB Atlas (source: ${mongoUriSource})...`);
+  mongoose.connect(mongoUri, {
+    serverSelectionTimeoutMS: 5000,
+    socketTimeoutMS: 45000,
+  })
+    .then(() => {
+      isConnecting = false;
+      lastMongoError = null;
+      console.log(`MongoDB Atlas Connected successfully to db "${mongoose.connection.name}"`);
+    })
+    .catch((err) => {
+      isConnecting = false;
+      lastMongoError = err.message || String(err);
+      console.error("MongoDB Connection Error:", lastMongoError);
+      setTimeout(connectToDatabase, 5000);
+    });
+}
+
+mongoose.connection.on("connected", () => {
+  lastMongoError = null;
+  console.log("MongoDB connection event: connected");
+});
+
+mongoose.connection.on("disconnected", () => {
+  console.warn("⚠️ MongoDB connection event: disconnected. Retrying in 5 seconds...");
+  setTimeout(connectToDatabase, 5000);
+});
+
+mongoose.connection.on("error", (err) => {
+  lastMongoError = err.message || String(err);
+  console.error("MongoDB connection event error:", lastMongoError);
+});
+
+connectToDatabase();
 
 // Socket.IO — each user joins a room with their own userId
 io.on("connection", (socket) => {
@@ -47,11 +101,19 @@ io.on("connection", (socket) => {
 // Inject socket into booking routes
 bookingRoutes.setIO(io);
 
-// Health check routes (for Render service monitoring)
+// Health check routes (for Render service monitoring and diagnostics)
 app.get("/health", (req, res) => {
+  const readyState = mongoose.connection.readyState;
+  const states = ["disconnected", "connected", "connecting", "disconnecting"];
   res.status(200).json({
     status: "ok",
-    dbStatus: mongoose.connection.readyState === 1 ? "connected" : "disconnected",
+    dbStatus: states[readyState] || "unknown",
+    dbReadyState: readyState,
+    dbName: mongoose.connection.name || null,
+    mongoConfigured: Boolean(process.env.MONGO_URI),
+    mongoUriSource,
+    mongoUriMasked: maskMongoUri(mongoUri),
+    lastMongoError,
     uptime: Math.floor(process.uptime()),
     timestamp: new Date().toISOString()
   });

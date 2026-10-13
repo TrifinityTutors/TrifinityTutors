@@ -2,14 +2,19 @@ const rawEnv = import.meta.env.VITE_API_BASE_URL;
 
 function normalizeUrl(url) {
   if (!url || typeof url !== 'string') return '';
-  const trimmed = url.trim().replace(/\/+$/, '');
+  let trimmed = url.trim().replace(/\/+$/, '');
   if (!trimmed) return '';
-  if (/^https?:\/\//i.test(trimmed)) return trimmed;
-  return `https://${trimmed}`;
+  if (!/^https?:\/\//i.test(trimmed)) {
+    trimmed = `https://${trimmed}`;
+  }
+  if (trimmed === 'https://trifinitytutors-backend.onrender.com') {
+    trimmed = 'https://trifinitytutors-backend-11nn.onrender.com';
+  }
+  return trimmed;
 }
 
 export const API_BASE = normalizeUrl(rawEnv) || (
-  import.meta.env.DEV ? 'http://localhost:5001' : 'https://trifinitytutors-backend.onrender.com'
+  import.meta.env.DEV ? 'http://localhost:5001' : 'https://trifinitytutors-backend-11nn.onrender.com'
 );
 
 export function apiUrl(path) {
