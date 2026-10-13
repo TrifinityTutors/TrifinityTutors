@@ -31,15 +31,35 @@ app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 // MongoDB Connection & Health Management
 const FALLBACK_MONGO_URI = "mongodb+srv://priyanshumahobia54_db_user:Myredmi6@cluster0.zbwqw5b.mongodb.net/test?appName=Cluster0";
 
+function sanitizeMongoUri(raw) {
+  if (!raw || typeof raw !== "string") return "";
+  let uri = raw.trim();
+  // Strip BOM and non-printable zero-width characters
+  uri = uri.replace(/^[\uFEFF\xA0\s]+|[\uFEFF\xA0\s]+$/g, "");
+  // Strip surrounding quotes
+  uri = uri.replace(/^["'“”‘’`]+|["'“”‘’`]+$/g, "");
+  // If user pasted "MONGO_URI=" or "MONGO_URL=" or "URI=" or "export MONGO_URI=" at the front
+  uri = uri.replace(/^(?:export\s+)?(?:MONGO_URI|MONGO_URL|DATABASE_URL|URI)\s*=\s*/i, "");
+  // Strip again if it had quotes after the =
+  uri = uri.replace(/^["'“”‘’`]+|["'“”‘’`]+$/g, "");
+  uri = uri.trim();
+  
+  const match = uri.match(/mongodb(?:\+srv)?:\/\/[^\s"'<>]+/i);
+  if (match) {
+    uri = match[0].trim();
+  }
+  return uri;
+}
+
 function resolveMongoUri() {
-  const envUri = (process.env.MONGO_URI || "").trim().replace(/^["']|["']$/g, "");
-  if (envUri) {
-    return { uri: envUri, source: "env" };
+  const sanitizedEnv = sanitizeMongoUri(process.env.MONGO_URI);
+  if (sanitizedEnv && (sanitizedEnv.startsWith("mongodb://") || sanitizedEnv.startsWith("mongodb+srv://"))) {
+    return { uri: sanitizedEnv, source: "env" };
   }
   return { uri: FALLBACK_MONGO_URI, source: "fallback" };
 }
 
-const { uri: mongoUri, source: mongoUriSource } = resolveMongoUri();
+let { uri: currentMongoUri, source: currentMongoUriSource } = resolveMongoUri();
 
 function maskMongoUri(uri) {
   if (!uri) return "not-configured";
@@ -56,8 +76,8 @@ let isConnecting = false;
 function connectToDatabase() {
   if (isConnecting || mongoose.connection.readyState === 1) return;
   isConnecting = true;
-  console.log(`Connecting to MongoDB Atlas (source: ${mongoUriSource})...`);
-  mongoose.connect(mongoUri, {
+  console.log(`Connecting to MongoDB Atlas (source: ${currentMongoUriSource})...`);
+  mongoose.connect(currentMongoUri, {
     serverSelectionTimeoutMS: 5000,
     socketTimeoutMS: 45000,
   })
@@ -70,6 +90,14 @@ function connectToDatabase() {
       isConnecting = false;
       lastMongoError = err.message || String(err);
       console.error("MongoDB Connection Error:", lastMongoError);
+
+      // If env URI failed, automatically fall back to the known working Atlas cluster!
+      if (currentMongoUriSource === "env" && currentMongoUri !== FALLBACK_MONGO_URI) {
+        console.warn("⚠️ Switching from failed env MONGO_URI to verified FALLBACK_MONGO_URI...");
+        currentMongoUri = FALLBACK_MONGO_URI;
+        currentMongoUriSource = "fallback_after_env_failure";
+      }
+
       setTimeout(connectToDatabase, 5000);
     });
 }
@@ -111,8 +139,8 @@ app.get("/health", (req, res) => {
     dbReadyState: readyState,
     dbName: mongoose.connection.name || null,
     mongoConfigured: Boolean(process.env.MONGO_URI),
-    mongoUriSource,
-    mongoUriMasked: maskMongoUri(mongoUri),
+    mongoUriSource: currentMongoUriSource,
+    mongoUriMasked: maskMongoUri(currentMongoUri),
     lastMongoError,
     uptime: Math.floor(process.uptime()),
     timestamp: new Date().toISOString()
