@@ -78,9 +78,11 @@ function LoginPage() {
 
       toast.success("Login successful!");
 
-      navigate(dashboardPathFor(role), {
-        replace: true,
-      });
+      if (role === "tutor" && !data.isProfileComplete) {
+        navigate("/register-tutor", { replace: true });
+      } else {
+        navigate(dashboardPathFor(role), { replace: true });
+      }
     } catch (error) {
       const message =
         error.message || "Google login failed. Please try again.";

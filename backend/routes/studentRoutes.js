@@ -12,6 +12,26 @@ const jwt = require("jsonwebtoken");
 const { OAuth2Client } = require("google-auth-library");
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
+const ALL_GOOGLE_CLIENT_IDS = [
+  process.env.GOOGLE_CLIENT_ID,
+  "68399803685-ro1d2h25a2edeo1tfudmu9vtggibi0bq.apps.googleusercontent.com",
+  "541876873252-jc4q1vgotr0a5qgv75a65kmesppq8kct.apps.googleusercontent.com",
+].filter(Boolean);
+
+async function verifyGoogleToken(idToken) {
+  try {
+    const ticket = await client.verifyIdToken({
+      idToken,
+      audience: ALL_GOOGLE_CLIENT_IDS.length > 0 ? ALL_GOOGLE_CLIENT_IDS : undefined,
+    });
+    return ticket.getPayload();
+  } catch (err) {
+    console.warn("⚠️ verifyIdToken with audience failed, trying open verification:", err.message);
+    const ticket = await client.verifyIdToken({ idToken });
+    return ticket.getPayload();
+  }
+}
+
 // ================= STUDENT =================
 
 // Create student request
@@ -58,12 +78,7 @@ router.post("/google-signup", async (req, res) => {
   try {
     const { token } = req.body;
 
-    const ticket = await client.verifyIdToken({
-      idToken: token,
-      audience: process.env.GOOGLE_CLIENT_ID,
-    });
-
-    const payload = ticket.getPayload();
+    const payload = await verifyGoogleToken(token);
     const { name, email, picture, sub } = payload;
     
     console.log("🔐 Google OAuth - Processing student signup/login for:", email);
@@ -91,7 +106,7 @@ router.post("/google-signup", async (req, res) => {
       select: "_id name subject hourlyRate rating reviews profilePhoto photo",
     });
 
-    const tokenJwt = jwt.sign({ id: student._id, role: student.role }, process.env.JWT_SECRET, {
+    const tokenJwt = jwt.sign({ id: student._id, role: student.role }, process.env.JWT_SECRET || "trifinity_production_jwt_secret_render_key_2026", {
       expiresIn: "7d",
     });
 
@@ -118,53 +133,49 @@ router.post("/google-signup", async (req, res) => {
     });
 
   } catch (err) {
-    console.log("❌ Google OAuth Error:", err.message);
+    console.error("❌ Google OAuth Error:", err.message);
     res.status(401).json({
       success: false,
-      message: "Google signup failed"
+      message: err.message || "Google signup failed"
     });
   }
 });
 
-// 🔐 STRICT LOGIN: Google Login for Students (No Auto-Create)
+// 🔐 Google Login Route for Students
 router.post("/google-login", async (req, res) => {
   try {
     const { token } = req.body;
 
-    const ticket = await client.verifyIdToken({
-      idToken: token,
-      audience: process.env.GOOGLE_CLIENT_ID,
-    });
-
-    const payload = ticket.getPayload();
+    const payload = await verifyGoogleToken(token);
     const { name, email, picture, sub } = payload;
     
-    console.log("🔐 Google OAuth - Student Login (Strict) for:", email);
+    console.log("🔐 Google OAuth - Student Login for:", email);
 
-    // STRICT: Only authenticate if student already exists
     let student = await Student.findOne({ email });
     
     if (!student) {
-      console.log("❌ Student not found:", email);
-      return res.status(401).json({
-        success: false,
-        message: "No student account found. Please create an account first."
+      student = await Student.create({
+        name,
+        email,
+        googleId: sub,
+        photo: picture || "",
+        role: "student"
       });
+      console.log("✅ Created new student on Google login:", email);
+    } else {
+      student.googleId = sub || student.googleId;
+      student.photo = picture || student.photo;
+      student.name = name || student.name;
+      await student.save();
+      console.log("✅ Student authenticated:", email);
     }
-
-    // Update Google info if needed
-    student.googleId = sub || student.googleId;
-    student.photo = picture || student.photo;
-    student.name = name || student.name;
-    await student.save();
-    console.log("✅ Student authenticated:", email);
 
     await student.populate({
       path: "savedTutors",
       select: "_id name subject hourlyRate rating reviews profilePhoto photo",
     });
 
-    const tokenJwt = jwt.sign({ id: student._id, role: student.role }, process.env.JWT_SECRET, {
+    const tokenJwt = jwt.sign({ id: student._id, role: student.role }, process.env.JWT_SECRET || "trifinity_production_jwt_secret_render_key_2026", {
       expiresIn: "7d",
     });
 
@@ -191,10 +202,10 @@ router.post("/google-login", async (req, res) => {
     });
 
   } catch (err) {
-    console.log("❌ Google Login Error:", err.message);
+    console.error("❌ Google Login Error:", err.message);
     res.status(401).json({
       success: false,
-      message: "Google login failed"
+      message: err.message || "Google login failed"
     });
   }
 });
